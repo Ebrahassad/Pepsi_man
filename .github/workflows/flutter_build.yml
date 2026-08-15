@@ -65,23 +65,32 @@ jobs:
 
       - name: Verify Pepsi Runner project
         run: |
+          set -e
+
           test -f pubspec.yaml
           test -d lib
           test -d assets
           test -d android
-          test -f android/settings.gradle
-          test -f android/app/build.gradle
+
+          test -f android/settings.gradle || \
+          test -f android/settings.gradle.kts
+
+          test -f android/app/build.gradle || \
+          test -f android/app/build.gradle.kts
+
           test -f android/app/src/main/AndroidManifest.xml
 
           echo "Pepsi Runner project verified."
 
 
       # ==========================================================
-      # 6. Create CI local.properties
+      # 6. Create Android local.properties
       # ==========================================================
 
       - name: Create Android local.properties
         run: |
+          set -e
+
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
 
@@ -92,30 +101,32 @@ jobs:
       # 7. Generate Gradle Wrapper
       # ==========================================================
       #
-      # The repository intentionally ignores:
+      # The repository ignores:
       # gradlew
       # gradlew.bat
       # gradle-wrapper.jar
       #
-      # They are generated inside GitHub Actions only.
+      # They are generated inside GitHub Actions.
+      #
+      # IMPORTANT:
+      # Do NOT delete android/.
       #
 
       - name: Generate Gradle Wrapper
+        working-directory: android
         run: |
           set -e
 
-          cd android
-
           gradle wrapper --gradle-version 8.4
 
-          cd ..
+          chmod +x gradlew
 
-          chmod +x android/gradlew
-
-          test -f android/gradlew
-          test -f android/gradle/wrapper/gradle-wrapper.jar
+          test -f gradlew
+          test -f gradle/wrapper/gradle-wrapper.jar
 
           echo "Gradle Wrapper generated successfully."
+
+          ./gradlew --version
 
 
       # ==========================================================
@@ -132,20 +143,17 @@ jobs:
 
       - name: Confirm Unity Ads dependency
         run: |
-          flutter pub deps | grep -i unity_ads_plugin || \
-          echo "WARNING: unity_ads_plugin was not found."
+          if flutter pub deps | grep -qi "unity_ads_plugin"; then
+            echo "Unity Ads dependency found."
+          else
+            echo "WARNING: unity_ads_plugin was not found."
+            echo "Check pubspec.yaml."
+          fi
 
 
       # ==========================================================
-      # 10. Decode existing Puzzle World keystore
+      # 10. Decode release keystore
       # ==========================================================
-      #
-      # IMPORTANT:
-      # The same signing keystore used by Puzzle World is reused
-      # for Pepsi Runner.
-      #
-      # The actual secrets remain inside GitHub Secrets.
-      #
 
       - name: Decode release keystore
         env:
@@ -192,7 +200,7 @@ jobs:
 
 
       # ==========================================================
-      # 12. Clean Flutter
+      # 12. Flutter clean
       # ==========================================================
 
       - name: Flutter clean
@@ -245,7 +253,7 @@ jobs:
           test -f "$APK"
 
           echo "=========================================="
-          echo "      PEPSI RUNNER APK BUILT SUCCESSFULLY"
+          echo "  PEPSI RUNNER APK BUILT SUCCESSFULLY"
           echo "=========================================="
 
           ls -lh "$APK"
