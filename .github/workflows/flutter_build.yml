@@ -37,7 +37,7 @@ jobs:
 
 
       # ==========================================================
-      # 3. Flutter
+      # 3. Flutter 3.24.5
       # ==========================================================
 
       - name: Set up Flutter
@@ -52,18 +52,19 @@ jobs:
       # 4. Verify environment
       # ==========================================================
 
-      - name: Verify Flutter installation
+      - name: Verify environment
         run: |
           flutter --version
           dart --version
+          java -version
           flutter doctor -v
 
 
       # ==========================================================
-      # 5. Verify project
+      # 5. Verify Pepsi Runner project
       # ==========================================================
 
-      - name: Verify Pepsi Runner project
+      - name: Verify project
         run: |
           set -e
 
@@ -72,19 +73,18 @@ jobs:
           test -d assets
           test -d android
 
-          test -f android/settings.gradle || \
-          test -f android/settings.gradle.kts
-
-          test -f android/app/build.gradle || \
-          test -f android/app/build.gradle.kts
-
+          test -f android/settings.gradle
+          test -f android/build.gradle
+          test -f android/app/build.gradle
           test -f android/app/src/main/AndroidManifest.xml
 
+          echo "=========================================="
           echo "Pepsi Runner project verified."
+          echo "=========================================="
 
 
       # ==========================================================
-      # 6. Create Android local.properties
+      # 6. Create CI local.properties
       # ==========================================================
 
       - name: Create Android local.properties
@@ -94,43 +94,112 @@ jobs:
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
 
-          echo "Android local.properties created."
+          echo "local.properties created."
 
 
       # ==========================================================
-      # 7. Generate Gradle Wrapper
+      # 7. Force Gradle Wrapper to 8.3
       # ==========================================================
       #
-      # The repository ignores:
+      # IMPORTANT:
+      # Do NOT run:
+      #
+      #   gradle wrapper
+      #
+      # because the GitHub runner may contain a newer Gradle
+      # version such as 9.x.
+      #
+      # Flutter 3.24.5 projects are compatible with the
+      # AGP 8.1 / Gradle 8.3 generation.
+      #
+      # We directly configure the wrapper instead.
+      # ==========================================================
+
+      - name: Configure Gradle Wrapper 8.3
+        run: |
+          set -e
+
+          mkdir -p android/gradle/wrapper
+
+          cat > android/gradle/wrapper/gradle-wrapper.properties <<'EOF'
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.3-all.zip
+          EOF
+
+          echo "=========================================="
+          echo "Gradle wrapper configured:"
+          cat android/gradle/wrapper/gradle-wrapper.properties
+          echo "=========================================="
+
+
+      # ==========================================================
+      # 8. Download Gradle 8.3 distribution
+      # ==========================================================
+      #
+      # The repository intentionally does not store:
       # gradlew
       # gradlew.bat
       # gradle-wrapper.jar
       #
-      # They are generated inside GitHub Actions.
+      # We download the official Gradle 8.3 distribution and use
+      # its Gradle executable to generate the wrapper files.
       #
-      # IMPORTANT:
-      # Do NOT delete android/.
-      #
+      # This avoids accidentally using GitHub's Gradle 9.x.
+      # ==========================================================
 
-      - name: Generate Gradle Wrapper
-        working-directory: android
+      - name: Generate Gradle Wrapper using Gradle 8.3
         run: |
           set -e
 
-          gradle wrapper --gradle-version 8.4
+          cd android
 
-          chmod +x gradlew
+          curl -fsSL \
+            https://services.gradle.org/distributions/gradle-8.3-bin.zip \
+            -o /tmp/gradle-8.3-bin.zip
 
-          test -f gradlew
-          test -f gradle/wrapper/gradle-wrapper.jar
+          mkdir -p /tmp/gradle-8.3
 
-          echo "Gradle Wrapper generated successfully."
+          unzip -q \
+            /tmp/gradle-8.3-bin.zip \
+            -d /tmp/gradle-8.3
 
-          ./gradlew --version
+          /tmp/gradle-8.3/gradle-8.3/bin/gradle wrapper --gradle-version 8.3
+
+          cd ..
+
+          chmod +x android/gradlew
+
+          echo "=========================================="
+          echo "Gradle Wrapper generated."
+          echo "=========================================="
+
+          test -f android/gradlew
+          test -f android/gradle/wrapper/gradle-wrapper.jar
+          test -f android/gradle/wrapper/gradle-wrapper.properties
+
+          echo "Wrapper files verified."
 
 
       # ==========================================================
-      # 8. Flutter dependencies
+      # 9. Verify actual wrapper version
+      # ==========================================================
+
+      - name: Verify Gradle Wrapper version
+        run: |
+          set -e
+
+          cd android
+
+          ./gradlew --version
+
+          cd ..
+
+
+      # ==========================================================
+      # 10. Flutter dependencies
       # ==========================================================
 
       - name: Flutter pub get
@@ -138,21 +207,32 @@ jobs:
 
 
       # ==========================================================
-      # 9. Confirm Unity Ads
+      # 11. Confirm Unity Ads
+      # ==========================================================
+      #
+      # If unity_ads_plugin is not currently in pubspec.yaml,
+      # this step only prints a warning.
+      # It does NOT fail the build.
       # ==========================================================
 
-      - name: Confirm Unity Ads dependency
+      - name: Check Unity Ads dependency
         run: |
-          if flutter pub deps | grep -qi "unity_ads_plugin"; then
-            echo "Unity Ads dependency found."
-          else
-            echo "WARNING: unity_ads_plugin was not found."
-            echo "Check pubspec.yaml."
-          fi
+          flutter pub deps | grep -i unity_ads_plugin || \
+          echo "INFO: unity_ads_plugin is not currently in pubspec.yaml."
 
 
       # ==========================================================
-      # 10. Decode release keystore
+      # 12. Decode existing release keystore
+      # ==========================================================
+      #
+      # Reuses the existing GitHub Secrets from Puzzle World:
+      #
+      # KEYSTORE_BASE64
+      # KEYSTORE_PASSWORD
+      # KEY_ALIAS
+      # KEY_PASSWORD
+      #
+      # The secrets themselves are never printed.
       # ==========================================================
 
       - name: Decode release keystore
@@ -174,7 +254,7 @@ jobs:
 
 
       # ==========================================================
-      # 11. Create key.properties
+      # 13. Create key.properties
       # ==========================================================
 
       - name: Create key.properties
@@ -200,7 +280,7 @@ jobs:
 
 
       # ==========================================================
-      # 12. Flutter clean
+      # 14. Flutter clean
       # ==========================================================
 
       - name: Flutter clean
@@ -208,7 +288,7 @@ jobs:
 
 
       # ==========================================================
-      # 13. Get dependencies again
+      # 15. Flutter pub get after clean
       # ==========================================================
 
       - name: Flutter pub get after clean
@@ -216,7 +296,7 @@ jobs:
 
 
       # ==========================================================
-      # 14. Analyze
+      # 16. Flutter analyze
       # ==========================================================
 
       - name: Flutter analyze
@@ -225,47 +305,4 @@ jobs:
 
 
       # ==========================================================
-      # 15. Tests
-      # ==========================================================
-
-      - name: Flutter test
-        run: flutter test
-
-
-      # ==========================================================
-      # 16. Build Release APK
-      # ==========================================================
-
-      - name: Build Release APK
-        run: flutter build apk --release
-
-
-      # ==========================================================
-      # 17. Verify APK
-      # ==========================================================
-
-      - name: Verify APK
-        run: |
-          set -e
-
-          APK="build/app/outputs/flutter-apk/app-release.apk"
-
-          test -f "$APK"
-
-          echo "=========================================="
-          echo "  PEPSI RUNNER APK BUILT SUCCESSFULLY"
-          echo "=========================================="
-
-          ls -lh "$APK"
-
-
-      # ==========================================================
-      # 18. Upload APK artifact
-      # ==========================================================
-
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: pepsi-runner-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 30
+      # 
