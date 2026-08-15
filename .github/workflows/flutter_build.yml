@@ -3,8 +3,11 @@ name: Build Pepsi Runner APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, master]
-    tags: ["v*"]
+    branches:
+      - main
+      - master
+    tags:
+      - "v*"
 
 jobs:
   build:
@@ -49,7 +52,7 @@ jobs:
       # 4. Verify environment
       # ==========================================================
 
-      - name: Verify Flutter installation
+      - name: Verify Flutter
         run: |
           flutter --version
           dart --version
@@ -62,14 +65,16 @@ jobs:
 
       - name: Verify Android project
         run: |
+          test -d android
           test -f android/settings.gradle
           test -f android/app/build.gradle
           test -f android/app/src/main/AndroidManifest.xml
-          echo "Android project found."
+
+          echo "Android project detected successfully."
 
 
       # ==========================================================
-      # 6. Create local.properties for CI
+      # 6. Create local.properties
       # ==========================================================
 
       - name: Create Android local.properties
@@ -77,16 +82,18 @@ jobs:
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
 
-          echo "===== local.properties ====="
-          cat android/local.properties
+          echo "local.properties created."
 
 
       # ==========================================================
-      # 7. Generate missing Gradle Wrapper
+      # 7. Check Gradle Wrapper
       # ==========================================================
       #
-      # android/ remains committed.
-      # Only the missing wrapper files are generated in CI.
+      # The wrapper is intentionally not committed according to
+      # the project's .gitignore.
+      #
+      # GitHub Actions already provides Gradle, so we generate the
+      # wrapper required by the existing Android project.
       #
 
       - name: Generate Gradle Wrapper
@@ -99,42 +106,34 @@ jobs:
 
           cd ..
 
-          test -f android/gradlew
-          test -f android/gradlew.bat
-          test -f android/gradle/wrapper/gradle-wrapper.jar
-
-          echo "Gradle Wrapper generated successfully."
-
-
-      # ==========================================================
-      # 8. Make gradlew executable
-      # ==========================================================
-
-      - name: Make Gradle Wrapper executable
-        run: |
           chmod +x android/gradlew
 
+          test -f android/gradlew
+          test -f android/gradle/wrapper/gradle-wrapper.jar
+
+          echo "Gradle Wrapper is ready."
+
 
       # ==========================================================
-      # 9. Flutter dependencies
+      # 8. Flutter dependencies
       # ==========================================================
 
-      - name: Get Flutter dependencies
+      - name: Flutter pub get
         run: flutter pub get
 
 
       # ==========================================================
-      # 10. Confirm Unity Ads
+      # 9. Show dependency tree
       # ==========================================================
 
-      - name: Confirm Unity Ads dependency
+      - name: Check Unity Ads dependency
         run: |
           flutter pub deps | grep -i unity_ads_plugin || \
-          echo "WARNING: unity_ads_plugin was not found."
+          echo "Unity Ads plugin not found in dependency tree."
 
 
       # ==========================================================
-      # 11. Decode release keystore
+      # 10. Decode release keystore
       # ==========================================================
 
       - name: Decode release keystore
@@ -150,11 +149,11 @@ jobs:
 
           test -f android/app/upload-keystore.jks
 
-          echo "Release keystore created."
+          echo "Release keystore created successfully."
 
 
       # ==========================================================
-      # 12. Create key.properties
+      # 11. Create key.properties
       # ==========================================================
 
       - name: Create key.properties
@@ -163,6 +162,8 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
+          set -e
+
           cat > android/key.properties <<EOF
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEY_PASSWORD
@@ -174,7 +175,7 @@ jobs:
 
 
       # ==========================================================
-      # 13. Flutter clean
+      # 12. Flutter clean
       # ==========================================================
 
       - name: Flutter clean
@@ -182,15 +183,15 @@ jobs:
 
 
       # ==========================================================
-      # 14. Flutter pub get again
+      # 13. Get dependencies again
       # ==========================================================
 
-      - name: Get dependencies after clean
+      - name: Flutter pub get after clean
         run: flutter pub get
 
 
       # ==========================================================
-      # 15. Analyze
+      # 14. Analyze
       # ==========================================================
 
       - name: Flutter analyze
@@ -199,7 +200,7 @@ jobs:
 
 
       # ==========================================================
-      # 16. Tests
+      # 15. Tests
       # ==========================================================
 
       - name: Flutter test
@@ -207,7 +208,7 @@ jobs:
 
 
       # ==========================================================
-      # 17. Build Release APK
+      # 16. Build Release APK
       # ==========================================================
 
       - name: Build Release APK
@@ -215,22 +216,25 @@ jobs:
 
 
       # ==========================================================
-      # 18. Verify APK
+      # 17. Verify APK
       # ==========================================================
 
       - name: Verify APK
         run: |
           test -f build/app/outputs/flutter-apk/app-release.apk
 
-          ls -lh \
-            build/app/outputs/flutter-apk/app-release.apk
+          echo "======================================"
+          echo "APK successfully built!"
+          echo "======================================"
+
+          ls -lh build/app/outputs/flutter-apk/app-release.apk
 
 
       # ==========================================================
-      # 19. Upload APK
+      # 18. Upload APK
       # ==========================================================
 
-      - name: Upload Release APK artifact
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
           name: pepsi-runner-release-apk
