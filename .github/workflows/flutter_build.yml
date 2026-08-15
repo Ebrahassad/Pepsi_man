@@ -52,7 +52,7 @@ jobs:
       # 4. Verify environment
       # ==========================================================
 
-      - name: Verify Flutter
+      - name: Verify Flutter installation
         run: |
           flutter --version
           dart --version
@@ -60,21 +60,24 @@ jobs:
 
 
       # ==========================================================
-      # 5. Verify Android project
+      # 5. Verify project
       # ==========================================================
 
-      - name: Verify Android project
+      - name: Verify Pepsi Runner project
         run: |
+          test -f pubspec.yaml
+          test -d lib
+          test -d assets
           test -d android
           test -f android/settings.gradle
           test -f android/app/build.gradle
           test -f android/app/src/main/AndroidManifest.xml
 
-          echo "Android project detected successfully."
+          echo "Pepsi Runner project verified."
 
 
       # ==========================================================
-      # 6. Create local.properties
+      # 6. Create CI local.properties
       # ==========================================================
 
       - name: Create Android local.properties
@@ -82,18 +85,19 @@ jobs:
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
 
-          echo "local.properties created."
+          echo "Android local.properties created."
 
 
       # ==========================================================
-      # 7. Check Gradle Wrapper
+      # 7. Generate Gradle Wrapper
       # ==========================================================
       #
-      # The wrapper is intentionally not committed according to
-      # the project's .gitignore.
+      # The repository intentionally ignores:
+      # gradlew
+      # gradlew.bat
+      # gradle-wrapper.jar
       #
-      # GitHub Actions already provides Gradle, so we generate the
-      # wrapper required by the existing Android project.
+      # They are generated inside GitHub Actions only.
       #
 
       - name: Generate Gradle Wrapper
@@ -111,7 +115,7 @@ jobs:
           test -f android/gradlew
           test -f android/gradle/wrapper/gradle-wrapper.jar
 
-          echo "Gradle Wrapper is ready."
+          echo "Gradle Wrapper generated successfully."
 
 
       # ==========================================================
@@ -123,18 +127,25 @@ jobs:
 
 
       # ==========================================================
-      # 9. Show dependency tree
+      # 9. Confirm Unity Ads
       # ==========================================================
 
-      - name: Check Unity Ads dependency
+      - name: Confirm Unity Ads dependency
         run: |
           flutter pub deps | grep -i unity_ads_plugin || \
-          echo "Unity Ads plugin not found in dependency tree."
+          echo "WARNING: unity_ads_plugin was not found."
 
 
       # ==========================================================
-      # 10. Decode release keystore
+      # 10. Decode existing Puzzle World keystore
       # ==========================================================
+      #
+      # IMPORTANT:
+      # The same signing keystore used by Puzzle World is reused
+      # for Pepsi Runner.
+      #
+      # The actual secrets remain inside GitHub Secrets.
+      #
 
       - name: Decode release keystore
         env:
@@ -142,14 +153,16 @@ jobs:
         run: |
           set -e
 
+          test -n "$KEYSTORE_BASE64"
+
           mkdir -p android/app
 
           echo "$KEYSTORE_BASE64" | base64 --decode \
             > android/app/upload-keystore.jks
 
-          test -f android/app/upload-keystore.jks
+          test -s android/app/upload-keystore.jks
 
-          echo "Release keystore created successfully."
+          echo "Release keystore decoded successfully."
 
 
       # ==========================================================
@@ -164,6 +177,10 @@ jobs:
         run: |
           set -e
 
+          test -n "$KEYSTORE_PASSWORD"
+          test -n "$KEY_ALIAS"
+          test -n "$KEY_PASSWORD"
+
           cat > android/key.properties <<EOF
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEY_PASSWORD
@@ -175,7 +192,7 @@ jobs:
 
 
       # ==========================================================
-      # 12. Flutter clean
+      # 12. Clean Flutter
       # ==========================================================
 
       - name: Flutter clean
@@ -221,17 +238,21 @@ jobs:
 
       - name: Verify APK
         run: |
-          test -f build/app/outputs/flutter-apk/app-release.apk
+          set -e
 
-          echo "======================================"
-          echo "APK successfully built!"
-          echo "======================================"
+          APK="build/app/outputs/flutter-apk/app-release.apk"
 
-          ls -lh build/app/outputs/flutter-apk/app-release.apk
+          test -f "$APK"
+
+          echo "=========================================="
+          echo "      PEPSI RUNNER APK BUILT SUCCESSFULLY"
+          echo "=========================================="
+
+          ls -lh "$APK"
 
 
       # ==========================================================
-      # 18. Upload APK
+      # 18. Upload APK artifact
       # ==========================================================
 
       - name: Upload Release APK
