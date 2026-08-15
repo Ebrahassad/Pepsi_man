@@ -25,7 +25,7 @@ class LevelEngine {
   final LevelProgress progress = LevelProgress();
 
   int _lastCheckpointIndex = -1;
-  double _cumulativeDistance = 0;
+  
 
   LevelEngine({required this.level, int? seed})
       : _generator = TrackGenerator(seed: seed) {
