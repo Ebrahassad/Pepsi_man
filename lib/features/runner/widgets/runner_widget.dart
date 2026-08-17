@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/runner_model.dart';
 
-/// Renders the runner using the animation frames for the current state.
+/// Renders the runner using animation frames for the current state.
 class RunnerWidget extends StatefulWidget {
   final RunnerState state;
   final double size;
@@ -22,6 +22,7 @@ class RunnerWidget extends StatefulWidget {
 class _RunnerWidgetState extends State<RunnerWidget>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+
   int _frameIndex = 0;
 
   @override
@@ -40,15 +41,23 @@ class _RunnerWidgetState extends State<RunnerWidget>
     switch (state) {
       case RunnerState.running:
         return const Duration(milliseconds: 480);
+
       case RunnerState.jumping:
         return const Duration(milliseconds: 420);
+
       case RunnerState.sliding:
         return const Duration(milliseconds: 360);
+
       case RunnerState.hit:
         return const Duration(milliseconds: 360);
+
+      case RunnerState.falling:
+        return const Duration(milliseconds: 360);
+
       case RunnerState.celebrating:
         return const Duration(milliseconds: 600);
-      default:
+
+      case RunnerState.idle:
         return const Duration(milliseconds: 320);
     }
   }
@@ -71,11 +80,7 @@ class _RunnerWidgetState extends State<RunnerWidget>
         return RunnerModel.celebrateCycleAssets;
 
       case RunnerState.falling:
-        return const [
-          'assets/images/characters/runner/runner_hit_01.webp',
-          'assets/images/characters/runner/runner_hit_02.webp',
-          'assets/images/characters/runner/runner_hit_03.webp',
-        ];
+        return RunnerModel.hitCycleAssets;
 
       case RunnerState.idle:
         return const [
@@ -100,8 +105,10 @@ class _RunnerWidgetState extends State<RunnerWidget>
     final frames = _framesForState(widget.state);
 
     if (frames.length <= 1) {
-      if (_frameIndex != 0) {
-        setState(() => _frameIndex = 0);
+      if (_frameIndex != 0 && mounted) {
+        setState(() {
+          _frameIndex = 0;
+        });
       }
       return;
     }
@@ -109,8 +116,10 @@ class _RunnerWidgetState extends State<RunnerWidget>
     final newFrame =
         (_controller.value * frames.length).floor() % frames.length;
 
-    if (newFrame != _frameIndex) {
-      setState(() => _frameIndex = newFrame);
+    if (newFrame != _frameIndex && mounted) {
+      setState(() {
+        _frameIndex = newFrame;
+      });
     }
   }
 
@@ -141,6 +150,10 @@ class _RunnerWidgetState extends State<RunnerWidget>
 
   String get _assetPath {
     final frames = _framesForState(widget.state);
+
+    if (frames.isEmpty) {
+      return RunnerModel.assetByState[RunnerState.idle]!;
+    }
 
     if (_frameIndex >= frames.length) {
       return frames.first;
@@ -193,12 +206,17 @@ class _FallbackRunnerPainter extends StatelessWidget {
 class _RunnerPainter extends CustomPainter {
   final RunnerState state;
 
-  _RunnerPainter({required this.state});
+  _RunnerPainter({
+    required this.state,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final bodyPaint = Paint()..color = _colorForState(state);
-    final headPaint = Paint()..color = const Color(0xFFFFCCA0);
+    final bodyPaint = Paint()
+      ..color = _colorForState(state);
+
+    final headPaint = Paint()
+      ..color = const Color(0xFFFFCCA0);
 
     double bodyHeight = size.height * 0.55;
     double bodyTop = size.height * 0.25;
@@ -252,7 +270,9 @@ class _RunnerPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _RunnerPainter oldDelegate) {
+  bool shouldRepaint(
+    covariant _RunnerPainter oldDelegate,
+  ) {
     return oldDelegate.state != state;
   }
 }
