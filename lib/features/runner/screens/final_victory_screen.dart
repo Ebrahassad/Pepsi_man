@@ -32,7 +32,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen> {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/images/backgrounds/victory_background.png',
+            'assets/images/backgrounds/victory_background.webp',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) => Container(color: AppTheme.background),
           ),

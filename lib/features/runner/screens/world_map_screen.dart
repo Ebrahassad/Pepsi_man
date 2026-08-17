@@ -21,7 +21,7 @@ class WorldMapScreen extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/images/backgrounds/world_map_background.png',
+            'assets/images/backgrounds/world_map_background.webp',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) => Container(color: AppTheme.background),
           ),

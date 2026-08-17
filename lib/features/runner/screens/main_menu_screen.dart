@@ -23,7 +23,7 @@ class MainMenuScreen extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/images/backgrounds/main_menu_background.png',
+            'assets/images/backgrounds/main_menu_background.webp',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) => Container(
               color: AppTheme.background,
@@ -37,7 +37,7 @@ class MainMenuScreen extends StatelessWidget {
                 children: [
                   const SizedBox(height: 24),
                   Image.asset(
-                    'assets/images/ui/game_logo.png',
+                    'assets/images/ui/game_logo.webp',
                     height: 120,
                     errorBuilder: (context, error, stackTrace) => Text(
                       language.text(ar: 'بيبسي رانر', en: 'Pepsi Runner'),

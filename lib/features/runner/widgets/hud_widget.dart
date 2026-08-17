@@ -44,13 +44,13 @@ class HudWidget extends StatelessWidget {
               children: [
                 _StatChip(
                   icon: Icons.local_drink,
-                  iconAsset: 'assets/images/ui/can_icon.png',
+                  iconAsset: 'assets/images/ui/can_icon.webp',
                   value: '${score.cans}',
                   color: AppTheme.success,
                 ),
                 _StatChip(
                   icon: Icons.monetization_on,
-                  iconAsset: 'assets/images/ui/coin_icon.png',
+                  iconAsset: 'assets/images/ui/coin_icon.webp',
                   value: '${score.coins}',
                   color: AppTheme.accent,
                 ),

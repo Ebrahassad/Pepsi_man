@@ -19,7 +19,7 @@ class StarRow extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2),
           child: Image.asset(
-            isFilled ? 'assets/images/ui/star.png' : 'assets/images/ui/star_empty.png',
+            isFilled ? 'assets/images/ui/star.webp' : 'assets/images/ui/star_empty.webp',
             width: size,
             height: size,
             errorBuilder: (context, error, stackTrace) => Icon(

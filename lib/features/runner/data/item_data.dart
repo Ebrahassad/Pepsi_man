@@ -8,37 +8,37 @@ class ItemData {
   static const Map<ItemType, ItemModel> collectibles = {
     ItemType.coin: ItemModel(
       type: ItemType.coin,
-      assetPath: 'assets/images/items/coin.png',
+      assetPath: 'assets/images/items/coin.webp',
       scoreValue: GameConstants.scoreCoin,
     ),
     ItemType.energyCan: ItemModel(
       type: ItemType.energyCan,
-      assetPath: 'assets/images/items/energy_can.png',
+      assetPath: 'assets/images/items/energy_can.webp',
       scoreValue: GameConstants.scoreCan,
     ),
     ItemType.bonusCan: ItemModel(
       type: ItemType.bonusCan,
-      assetPath: 'assets/images/items/bonus_can.png',
+      assetPath: 'assets/images/items/bonus_can.webp',
       scoreValue: GameConstants.scoreBonusCan,
     ),
     ItemType.magnet: ItemModel(
       type: ItemType.magnet,
-      assetPath: 'assets/images/items/magnet.png',
+      assetPath: 'assets/images/items/magnet.webp',
       scoreValue: 0,
     ),
     ItemType.shield: ItemModel(
       type: ItemType.shield,
-      assetPath: 'assets/images/items/shield.png',
+      assetPath: 'assets/images/items/shield.webp',
       scoreValue: 0,
     ),
     ItemType.speedBoost: ItemModel(
       type: ItemType.speedBoost,
-      assetPath: 'assets/images/items/speed_boost.png',
+      assetPath: 'assets/images/items/speed_boost.webp',
       scoreValue: 0,
     ),
     ItemType.invincibility: ItemModel(
       type: ItemType.invincibility,
-      assetPath: 'assets/images/items/invincibility.png',
+      assetPath: 'assets/images/items/invincibility.webp',
       scoreValue: 0,
     ),
   };
@@ -46,22 +46,22 @@ class ItemData {
   static const Map<PowerUpType, PowerUpModel> powerUps = {
     PowerUpType.magnet: PowerUpModel(
       type: PowerUpType.magnet,
-      assetPath: 'assets/images/items/magnet.png',
+      assetPath: 'assets/images/items/magnet.webp',
       durationSeconds: GameConstants.magnetDuration,
     ),
     PowerUpType.shield: PowerUpModel(
       type: PowerUpType.shield,
-      assetPath: 'assets/images/items/shield.png',
+      assetPath: 'assets/images/items/shield.webp',
       durationSeconds: 0,
     ),
     PowerUpType.speedBoost: PowerUpModel(
       type: PowerUpType.speedBoost,
-      assetPath: 'assets/images/items/speed_boost.png',
+      assetPath: 'assets/images/items/speed_boost.webp',
       durationSeconds: GameConstants.speedBoostDuration,
     ),
     PowerUpType.invincibility: PowerUpModel(
       type: PowerUpType.invincibility,
-      assetPath: 'assets/images/items/invincibility.png',
+      assetPath: 'assets/images/items/invincibility.webp',
       durationSeconds: GameConstants.invincibilityDuration,
     ),
   };

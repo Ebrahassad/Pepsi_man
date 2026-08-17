@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/runner_model.dart';
 
-/// Renders RunnerHero at the given animation state. Cycles through the
-/// 3 running frames while `state == running`. If an asset file is
-/// missing (not yet supplied by the user), falls back to a simple drawn
-/// silhouette instead of crashing — see rule 64 in the spec.
+/// Renders the runner using the animation frames for the current state.
 class RunnerWidget extends StatefulWidget {
   final RunnerState state;
   final double size;
@@ -22,25 +19,96 @@ class RunnerWidget extends StatefulWidget {
   State<RunnerWidget> createState() => _RunnerWidgetState();
 }
 
-class _RunnerWidgetState extends State<RunnerWidget> with SingleTickerProviderStateMixin {
+class _RunnerWidgetState extends State<RunnerWidget>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   int _frameIndex = 0;
 
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 320),
+      duration: _durationForState(widget.state),
     )..addListener(_onTick);
-    if (widget.state == RunnerState.running) {
-      _controller.repeat();
+
+    _startAnimationIfNeeded();
+  }
+
+  Duration _durationForState(RunnerState state) {
+    switch (state) {
+      case RunnerState.running:
+        return const Duration(milliseconds: 480);
+      case RunnerState.jumping:
+        return const Duration(milliseconds: 420);
+      case RunnerState.sliding:
+        return const Duration(milliseconds: 360);
+      case RunnerState.hit:
+        return const Duration(milliseconds: 360);
+      case RunnerState.celebrating:
+        return const Duration(milliseconds: 600);
+      default:
+        return const Duration(milliseconds: 320);
+    }
+  }
+
+  List<String> _framesForState(RunnerState state) {
+    switch (state) {
+      case RunnerState.running:
+        return RunnerModel.runCycleAssets;
+
+      case RunnerState.jumping:
+        return RunnerModel.jumpCycleAssets;
+
+      case RunnerState.sliding:
+        return RunnerModel.slideCycleAssets;
+
+      case RunnerState.hit:
+        return RunnerModel.hitCycleAssets;
+
+      case RunnerState.celebrating:
+        return RunnerModel.celebrateCycleAssets;
+
+      case RunnerState.falling:
+        return const [
+          'assets/images/characters/runner/runner_hit_01.webp',
+          'assets/images/characters/runner/runner_hit_02.webp',
+          'assets/images/characters/runner/runner_hit_03.webp',
+        ];
+
+      case RunnerState.idle:
+        return const [
+          'assets/images/characters/runner/runner_run_01.webp',
+        ];
+    }
+  }
+
+  bool _shouldAnimate(RunnerState state) {
+    return state != RunnerState.idle;
+  }
+
+  void _startAnimationIfNeeded() {
+    if (_shouldAnimate(widget.state)) {
+      _controller
+        ..duration = _durationForState(widget.state)
+        ..repeat();
     }
   }
 
   void _onTick() {
-    final newFrame = (_controller.value * RunnerModel.runCycleAssets.length).floor() %
-        RunnerModel.runCycleAssets.length;
+    final frames = _framesForState(widget.state);
+
+    if (frames.length <= 1) {
+      if (_frameIndex != 0) {
+        setState(() => _frameIndex = 0);
+      }
+      return;
+    }
+
+    final newFrame =
+        (_controller.value * frames.length).floor() % frames.length;
+
     if (newFrame != _frameIndex) {
       setState(() => _frameIndex = newFrame);
     }
@@ -49,11 +117,18 @@ class _RunnerWidgetState extends State<RunnerWidget> with SingleTickerProviderSt
   @override
   void didUpdateWidget(covariant RunnerWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.state == RunnerState.running && !_controller.isAnimating) {
-      _controller.repeat();
-    } else if (widget.state != RunnerState.running && _controller.isAnimating) {
-      _controller.stop();
+
+    if (oldWidget.state != widget.state) {
+      _controller
+        ..stop()
+        ..reset()
+        ..duration = _durationForState(widget.state);
+
       _frameIndex = 0;
+
+      _startAnimationIfNeeded();
+
+      setState(() {});
     }
   }
 
@@ -65,11 +140,13 @@ class _RunnerWidgetState extends State<RunnerWidget> with SingleTickerProviderSt
   }
 
   String get _assetPath {
-    if (widget.state == RunnerState.running) {
-      return RunnerModel.runCycleAssets[_frameIndex];
+    final frames = _framesForState(widget.state);
+
+    if (_frameIndex >= frames.length) {
+      return frames.first;
     }
-    return RunnerModel.assetByState[widget.state] ??
-        RunnerModel.assetByState[RunnerState.idle]!;
+
+    return frames[_frameIndex];
   }
 
   @override
@@ -82,24 +159,27 @@ class _RunnerWidgetState extends State<RunnerWidget> with SingleTickerProviderSt
         child: Image.asset(
           _assetPath,
           fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) => _FallbackRunnerPainter(
-            state: widget.state,
-            size: widget.size,
-          ),
+          errorBuilder: (context, error, stackTrace) {
+            return _FallbackRunnerPainter(
+              state: widget.state,
+              size: widget.size,
+            );
+          },
         ),
       ),
     );
   }
 }
 
-/// Simple drawn placeholder used only when the real sprite asset hasn't
-/// been added yet by the developer. Keeps the game fully playable/testable
-/// with zero art.
+/// Fallback used only if an actual sprite is missing.
 class _FallbackRunnerPainter extends StatelessWidget {
   final RunnerState state;
   final double size;
 
-  const _FallbackRunnerPainter({required this.state, required this.size});
+  const _FallbackRunnerPainter({
+    required this.state,
+    required this.size,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -126,22 +206,29 @@ class _RunnerPainter extends CustomPainter {
     if (state == RunnerState.sliding) {
       bodyHeight = size.height * 0.3;
       bodyTop = size.height * 0.55;
-    } else if (state == RunnerState.jumping || state == RunnerState.falling) {
+    } else if (state == RunnerState.jumping ||
+        state == RunnerState.falling) {
       bodyTop = size.height * 0.1;
     }
 
-    // Body
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(size.width * 0.3, bodyTop, size.width * 0.4, bodyHeight),
+        Rect.fromLTWH(
+          size.width * 0.3,
+          bodyTop,
+          size.width * 0.4,
+          bodyHeight,
+        ),
         const Radius.circular(10),
       ),
       bodyPaint,
     );
 
-    // Head
     canvas.drawCircle(
-      Offset(size.width * 0.5, bodyTop - size.height * 0.08),
+      Offset(
+        size.width * 0.5,
+        bodyTop - size.height * 0.08,
+      ),
       size.width * 0.14,
       headPaint,
     );
@@ -152,15 +239,20 @@ class _RunnerPainter extends CustomPainter {
       case RunnerState.hit:
       case RunnerState.falling:
         return const Color(0xFFE53935);
+
       case RunnerState.celebrating:
         return const Color(0xFFFFC107);
+
       case RunnerState.sliding:
         return const Color(0xFF43A047);
+
       default:
         return const Color(0xFF1E88E5);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _RunnerPainter oldDelegate) => oldDelegate.state != state;
+  bool shouldRepaint(covariant _RunnerPainter oldDelegate) {
+    return oldDelegate.state != state;
+  }
 }

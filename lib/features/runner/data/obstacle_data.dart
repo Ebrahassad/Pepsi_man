@@ -8,7 +8,7 @@ class ObstacleData {
   static const Map<ObstacleType, ObstacleModel> all = {
     ObstacleType.car: ObstacleModel(
       type: ObstacleType.car,
-      assetPath: 'assets/images/obstacles/car.png',
+      assetPath: 'assets/images/obstacles/car.webp',
       requiredAction: ObstacleAction.avoidLane,
       motion: ObstacleMotion.static_,
       width: 90,
@@ -16,7 +16,7 @@ class ObstacleData {
     ),
     ObstacleType.truck: ObstacleModel(
       type: ObstacleType.truck,
-      assetPath: 'assets/images/obstacles/truck.png',
+      assetPath: 'assets/images/obstacles/truck.webp',
       requiredAction: ObstacleAction.avoidLane,
       motion: ObstacleMotion.movingLaneChange,
       width: 110,
@@ -24,7 +24,7 @@ class ObstacleData {
     ),
     ObstacleType.bus: ObstacleModel(
       type: ObstacleType.bus,
-      assetPath: 'assets/images/obstacles/bus.png',
+      assetPath: 'assets/images/obstacles/bus.webp',
       requiredAction: ObstacleAction.avoidLane,
       motion: ObstacleMotion.crossLane,
       width: 120,
@@ -32,7 +32,7 @@ class ObstacleData {
     ),
     ObstacleType.barrier: ObstacleModel(
       type: ObstacleType.barrier,
-      assetPath: 'assets/images/obstacles/barrier.png',
+      assetPath: 'assets/images/obstacles/barrier.webp',
       requiredAction: ObstacleAction.jump,
       motion: ObstacleMotion.static_,
       width: 80,
@@ -40,7 +40,7 @@ class ObstacleData {
     ),
     ObstacleType.cone: ObstacleModel(
       type: ObstacleType.cone,
-      assetPath: 'assets/images/obstacles/cone.png',
+      assetPath: 'assets/images/obstacles/cone.webp',
       requiredAction: ObstacleAction.jump,
       motion: ObstacleMotion.static_,
       width: 40,
@@ -48,7 +48,7 @@ class ObstacleData {
     ),
     ObstacleType.trashBin: ObstacleModel(
       type: ObstacleType.trashBin,
-      assetPath: 'assets/images/obstacles/trash_bin.png',
+      assetPath: 'assets/images/obstacles/trash_bin.webp',
       requiredAction: ObstacleAction.avoidLane,
       motion: ObstacleMotion.sideAppear,
       width: 55,
@@ -56,7 +56,7 @@ class ObstacleData {
     ),
     ObstacleType.constructionBarrier: ObstacleModel(
       type: ObstacleType.constructionBarrier,
-      assetPath: 'assets/images/obstacles/construction_barrier.png',
+      assetPath: 'assets/images/obstacles/construction_barrier.webp',
       requiredAction: ObstacleAction.jump,
       motion: ObstacleMotion.static_,
       width: 90,
@@ -64,7 +64,7 @@ class ObstacleData {
     ),
     ObstacleType.container: ObstacleModel(
       type: ObstacleType.container,
-      assetPath: 'assets/images/obstacles/container.png',
+      assetPath: 'assets/images/obstacles/container.webp',
       requiredAction: ObstacleAction.avoidLane,
       motion: ObstacleMotion.static_,
       width: 130,
@@ -72,7 +72,7 @@ class ObstacleData {
     ),
     ObstacleType.gate: ObstacleModel(
       type: ObstacleType.gate,
-      assetPath: 'assets/images/obstacles/gate.png',
+      assetPath: 'assets/images/obstacles/gate.webp',
       requiredAction: ObstacleAction.slide,
       motion: ObstacleMotion.static_,
       width: 140,
@@ -80,7 +80,7 @@ class ObstacleData {
     ),
     ObstacleType.lowBarrier: ObstacleModel(
       type: ObstacleType.lowBarrier,
-      assetPath: 'assets/images/obstacles/barrier.png',
+      assetPath: 'assets/images/obstacles/barrier.webp',
       requiredAction: ObstacleAction.jump,
       motion: ObstacleMotion.static_,
       width: 80,
@@ -88,7 +88,7 @@ class ObstacleData {
     ),
     ObstacleType.highBarrier: ObstacleModel(
       type: ObstacleType.highBarrier,
-      assetPath: 'assets/images/obstacles/gate.png',
+      assetPath: 'assets/images/obstacles/gate.webp',
       requiredAction: ObstacleAction.slide,
       motion: ObstacleMotion.static_,
       width: 90,
@@ -96,7 +96,7 @@ class ObstacleData {
     ),
     ObstacleType.movingVehicle: ObstacleModel(
       type: ObstacleType.movingVehicle,
-      assetPath: 'assets/images/obstacles/car.png',
+      assetPath: 'assets/images/obstacles/car.webp',
       requiredAction: ObstacleAction.avoidLane,
       motion: ObstacleMotion.movingTowardPlayer,
       width: 90,
@@ -104,7 +104,7 @@ class ObstacleData {
     ),
     ObstacleType.roadBlock: ObstacleModel(
       type: ObstacleType.roadBlock,
-      assetPath: 'assets/images/obstacles/road_block.png',
+      assetPath: 'assets/images/obstacles/road_block.webp',
       requiredAction: ObstacleAction.jump,
       motion: ObstacleMotion.static_,
       width: 100,

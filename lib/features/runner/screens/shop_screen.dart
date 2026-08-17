@@ -19,25 +19,25 @@ class ShopScreen extends StatelessWidget {
         'extra_life',
         Icons.favorite,
         language.text(ar: 'حياة إضافية', en: 'Extra Life'),
-        'assets/images/ui/life_icon.png',
+        'assets/images/ui/life_icon.webp',
       ),
       (
         'shield',
         Icons.shield,
         language.text(ar: 'درع', en: 'Shield'),
-        'assets/images/items/shield.png',
+        'assets/images/items/shield.webp',
       ),
       (
         'magnet',
         Icons.attractions,
         language.text(ar: 'مغناطيس', en: 'Magnet'),
-        'assets/images/items/magnet.png',
+        'assets/images/items/magnet.webp',
       ),
       (
         'speed_boost',
         Icons.speed,
         language.text(ar: 'تعزيز السرعة', en: 'Speed Boost'),
-        'assets/images/items/speed_boost.png',
+        'assets/images/items/speed_boost.webp',
       ),
     ];
 

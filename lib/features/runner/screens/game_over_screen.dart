@@ -59,7 +59,7 @@ class _GameOverScreenState extends State<GameOverScreen> {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/images/backgrounds/game_over_background.png',
+            'assets/images/backgrounds/game_over_background.webp',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) => Container(color: AppTheme.background),
           ),

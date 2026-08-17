@@ -37,7 +37,7 @@ class _SplashScreenState extends State<SplashScreen> {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/images/backgrounds/splash_background.png',
+            'assets/images/backgrounds/splash_background.webp',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) => Container(
               color: AppTheme.background,
@@ -49,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
-                  'assets/images/ui/game_logo.png',
+                  'assets/images/ui/game_logo.webp',
                   width: 220,
                   errorBuilder: (context, error, stackTrace) => Text(
                     language.text(ar: 'بيبسي رانر', en: 'Pepsi Runner'),

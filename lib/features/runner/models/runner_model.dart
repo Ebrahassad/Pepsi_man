@@ -1,10 +1,17 @@
-enum RunnerState { idle, running, jumping, sliding, hit, falling, celebrating }
+enum RunnerState {
+  idle,
+  running,
+  jumping,
+  sliding,
+  hit,
+  falling,
+  celebrating,
+}
 
-/// Represents RunnerHero — the player character. Holds only presentation
-/// + high-level status; live physics values live in `RunnerPhysics`.
+/// Represents RunnerHero — the player character.
 class RunnerModel {
   RunnerState state;
-  int lane; // 0 = left, 1 = center, 2 = right
+  int lane;
   int lives;
   bool isInvincible;
   bool hasShield;
@@ -22,19 +29,54 @@ class RunnerModel {
   });
 
   static const Map<RunnerState, String> assetByState = {
-    RunnerState.idle: 'assets/images/characters/runner/runner_idle.png',
-    RunnerState.running: 'assets/images/characters/runner/runner_run_01.png',
-    RunnerState.jumping: 'assets/images/characters/runner/runner_jump.png',
-    RunnerState.sliding: 'assets/images/characters/runner/runner_slide.png',
-    RunnerState.hit: 'assets/images/characters/runner/runner_hit.png',
-    RunnerState.falling: 'assets/images/characters/runner/runner_hit.png',
-    RunnerState.celebrating: 'assets/images/characters/runner/runner_celebrate.png',
+    RunnerState.idle:
+        'assets/images/characters/runner/runner_run_01.webp',
+    RunnerState.running:
+        'assets/images/characters/runner/runner_run_01.webp',
+    RunnerState.jumping:
+        'assets/images/characters/runner/runner_jump_01.webp',
+    RunnerState.sliding:
+        'assets/images/characters/runner/runner_slide_01.webp',
+    RunnerState.hit:
+        'assets/images/characters/runner/runner_hit_01.webp',
+    RunnerState.falling:
+        'assets/images/characters/runner/runner_hit_03.webp',
+    RunnerState.celebrating:
+        'assets/images/characters/runner/runner_celebrate_01.webp',
   };
 
   static const List<String> runCycleAssets = [
-    'assets/images/characters/runner/runner_run_01.png',
-    'assets/images/characters/runner/runner_run_02.png',
-    'assets/images/characters/runner/runner_run_03.png',
+    'assets/images/characters/runner/runner_run_01.webp',
+    'assets/images/characters/runner/runner_run_02.webp',
+    'assets/images/characters/runner/runner_run_03.webp',
+    'assets/images/characters/runner/runner_run_04.webp',
+    'assets/images/characters/runner/runner_run_05.webp',
+    'assets/images/characters/runner/runner_run_06.webp',
+  ];
+
+  static const List<String> jumpCycleAssets = [
+    'assets/images/characters/runner/runner_jump_01.webp',
+    'assets/images/characters/runner/runner_jump_02.webp',
+    'assets/images/characters/runner/runner_jump_03.webp',
+    'assets/images/characters/runner/runner_jump_04.webp',
+  ];
+
+  static const List<String> slideCycleAssets = [
+    'assets/images/characters/runner/runner_slide_01.webp',
+    'assets/images/characters/runner/runner_slide_02.webp',
+    'assets/images/characters/runner/runner_slide_03.webp',
+  ];
+
+  static const List<String> hitCycleAssets = [
+    'assets/images/characters/runner/runner_hit_01.webp',
+    'assets/images/characters/runner/runner_hit_02.webp',
+    'assets/images/characters/runner/runner_hit_03.webp',
+  ];
+
+  static const List<String> celebrateCycleAssets = [
+    'assets/images/characters/runner/runner_celebrate_01.webp',
+    'assets/images/characters/runner/runner_celebrate_02.webp',
+    'assets/images/characters/runner/runner_celebrate_03.webp',
   ];
 
   RunnerModel copyWith({
@@ -53,7 +95,8 @@ class RunnerModel {
       isInvincible: isInvincible ?? this.isInvincible,
       hasShield: hasShield ?? this.hasShield,
       isMagnetActive: isMagnetActive ?? this.isMagnetActive,
-      isSpeedBoostActive: isSpeedBoostActive ?? this.isSpeedBoostActive,
+      isSpeedBoostActive:
+          isSpeedBoostActive ?? this.isSpeedBoostActive,
     );
   }
 }
