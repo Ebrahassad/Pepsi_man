@@ -22,10 +22,10 @@ class GameConstants {
   static const double laneSwitchDurationSeconds = 0.18;
 
   // Speed
-  static const double defaultBaseSpeed = 320.0; // px/s
-  static const double defaultMaxSpeed = 900.0;
-  static const double defaultAcceleration = 6.0; // px/s^2 ramp
-
+static const double defaultBaseSpeed = 260.0;
+static const double defaultMaxSpeed = 650.0;
+static const double defaultAcceleration = 4.0;
+  
   // Lives
   static const int startingLives = 3;
 
