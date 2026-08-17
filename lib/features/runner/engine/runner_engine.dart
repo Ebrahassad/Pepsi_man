@@ -41,34 +41,25 @@ class RunnerEngine {
   late final RunnerPhysics physics;
   late final LevelEngine levelEngine;
 
-  final ObstacleEngine obstacleEngine =
-      ObstacleEngine();
-
-  final ItemEngine itemEngine =
-      ItemEngine();
-
-  final CollisionEngine collisionEngine =
-      CollisionEngine();
-
-  final ScoreEngine scoreEngine =
-      ScoreEngine();
-
-  final CameraEngine cameraEngine =
-      CameraEngine();
+  final ObstacleEngine obstacleEngine = ObstacleEngine();
+  final ItemEngine itemEngine = ItemEngine();
+  final CollisionEngine collisionEngine = CollisionEngine();
+  final ScoreEngine scoreEngine = ScoreEngine();
+  final CameraEngine cameraEngine = CameraEngine();
 
   /// Current distance travelled by the runner.
   double distanceMeters = 0;
 
-  /// Distance from the previous frame.
+  /// Runner distance at the beginning of the current frame.
   ///
-  /// Kept here so collision systems can later determine whether
-  /// an obstacle/item was crossed between two frames.
+  /// CollisionEngine uses this together with [distanceMeters] to detect
+  /// objects crossed between frames, preventing high-speed objects from
+  /// being skipped.
   double previousDistanceMeters = 0;
 
   int _spawnedSegmentCount = 0;
 
-  RunEndReason endReason =
-      RunEndReason.none;
+  RunEndReason endReason = RunEndReason.none;
 
   double _hitInvulnerabilitySeconds = 0;
 
@@ -87,8 +78,7 @@ class RunnerEngine {
       seed: seed,
     );
 
-    runner.lives =
-        GameConstants.startingLives;
+    runner.lives = GameConstants.startingLives;
 
     _spawnUpcomingSegments();
   }
@@ -97,9 +87,7 @@ class RunnerEngine {
   // INPUT
   // ---------------------------------------------------------------------------
 
-  void handleInput(
-    RunnerInputAction action,
-  ) {
+  void handleInput(RunnerInputAction action) {
     switch (action) {
       case RunnerInputAction.laneLeft:
         physics.requestLaneChange(-1);
@@ -133,12 +121,8 @@ class RunnerEngine {
       return;
     }
 
-    // -----------------------------------------------------------------------
-    // Keep previous distance before advancing the frame.
-    // -----------------------------------------------------------------------
-
-    previousDistanceMeters =
-        distanceMeters;
+    // Save the distance before advancing this frame.
+    previousDistanceMeters = distanceMeters;
 
     // -----------------------------------------------------------------------
     // 1. PHYSICS
@@ -158,8 +142,7 @@ class RunnerEngine {
     // 2. DISTANCE / WORLD SCROLL
     // -----------------------------------------------------------------------
 
-    distanceMeters +=
-        physics.forwardSpeed * dt;
+    distanceMeters += physics.forwardSpeed * dt;
 
     // -----------------------------------------------------------------------
     // 3. OBSTACLES + ITEMS
@@ -213,8 +196,7 @@ class RunnerEngine {
     // 8. RUNNER VISUAL STATE
     // -----------------------------------------------------------------------
 
-    runner.state =
-        physics.resolveState(
+    runner.state = physics.resolveState(
       isHit:
           _hitInvulnerabilitySeconds > 0 &&
               runner.lives > 0,
@@ -239,27 +221,21 @@ class RunnerEngine {
   // SPAWN
   // ---------------------------------------------------------------------------
 
-  /// How far ahead the game should prepare segments.
+  /// Calculates how far ahead the game should prepare track segments.
   ///
-  /// Previously this was a fixed 60 units:
+  /// The old system used a fixed 60-unit look-ahead. At higher speeds this
+  /// meant the game could not prepare enough content ahead of the runner.
   ///
-  ///     distanceMeters + 60
-  ///
-  /// That becomes far too short at higher speeds.
-  ///
-  /// We now calculate the look-ahead from the current speed and a target
-  /// preparation time.
+  /// The new value is based on speed and preparation time.
   double get _spawnLookAheadDistance {
     const preparationTimeSeconds = 2.2;
 
     const minimumLookAhead = 180.0;
     const maximumLookAhead = 1600.0;
 
-    final speed =
-        physics.forwardSpeed;
-
     final calculated =
-        speed * preparationTimeSeconds;
+        physics.forwardSpeed *
+        preparationTimeSeconds;
 
     return calculated.clamp(
       minimumLookAhead,
@@ -268,14 +244,11 @@ class RunnerEngine {
   }
 
   void _spawnUpcomingSegments() {
-    final starts =
-        levelEngine.segmentStartDistances;
-
-    final lookAhead =
-        _spawnLookAheadDistance;
+    final starts = levelEngine.segmentStartDistances;
 
     final spawnLimit =
-        distanceMeters + lookAhead;
+        distanceMeters +
+        _spawnLookAheadDistance;
 
     for (
       int i = _spawnedSegmentCount;
@@ -310,12 +283,12 @@ class RunnerEngine {
     // -------------------------------------------------------------------------
 
     for (
-  final obstacle
-      in obstacleEngine.obstaclesNear(
-    distanceMeters,
-    forwardSpeed: physics.forwardSpeed,
-  )
-) {
+      final obstacle
+          in obstacleEngine.obstaclesNear(
+        distanceMeters,
+        forwardSpeed: physics.forwardSpeed,
+      )
+    ) {
       if (obstacle.isHit ||
           obstacle.isPassed) {
         continue;
@@ -325,6 +298,8 @@ class RunnerEngine {
           collisionEngine.checkObstacleHit(
         obstacle: obstacle,
         physics: physics,
+        previousRunnerDistance:
+            previousDistanceMeters,
         runnerDistance: distanceMeters,
       );
 
@@ -332,14 +307,13 @@ class RunnerEngine {
         obstacle.isHit = true;
         _applyHit();
       } else if (
-          (obstacle.distance -
-                  distanceMeters)
-              .abs() <
-          0.5) {
+          obstacle.distance <
+              distanceMeters &&
+          obstacle.distance >=
+              previousDistanceMeters) {
         obstacle.isPassed = true;
 
-        scoreEngine
-            .registerObstacleAvoided();
+        scoreEngine.registerObstacleAvoided();
       }
     }
 
@@ -353,16 +327,18 @@ class RunnerEngine {
             : 0.0;
 
     for (
-  final item
-      in itemEngine.itemsNear(
-    distanceMeters,
-    forwardSpeed: physics.forwardSpeed,
-  )
-) {
+      final item
+          in itemEngine.itemsNear(
+        distanceMeters,
+        forwardSpeed: physics.forwardSpeed,
+      )
+    ) {
       final collected =
           collisionEngine.checkItemCollected(
         item: item,
         physics: physics,
+        previousRunnerDistance:
+            previousDistanceMeters,
         runnerDistance: distanceMeters,
         magnetRadius: magnetRadius,
       );
@@ -372,8 +348,7 @@ class RunnerEngine {
       }
     }
 
-    itemEngine
-        .pruneCollectedAndPassed(
+    itemEngine.pruneCollectedAndPassed(
       distanceMeters,
     );
   }
@@ -382,36 +357,27 @@ class RunnerEngine {
   // ITEMS / POWER UPS
   // ---------------------------------------------------------------------------
 
-  void _collectItem(
-    ItemInstance item,
-  ) {
+  void _collectItem(ItemInstance item) {
     itemEngine.collect(item);
 
     scoreEngine.registerItem(
       item.type,
     );
 
-    if (item.type ==
-            ItemType.energyCan ||
-        item.type ==
-            ItemType.bonusCan) {
+    if (item.type == ItemType.energyCan ||
+        item.type == ItemType.bonusCan) {
       levelEngine.registerCan();
 
-      AudioManager.instance
-          .playCanCollect();
-    } else if (
-        item.type == ItemType.coin) {
+      AudioManager.instance.playCanCollect();
+    } else if (item.type == ItemType.coin) {
       levelEngine.registerCoin();
 
-      AudioManager.instance
-          .playCoinCollect();
+      AudioManager.instance.playCoinCollect();
     }
 
     if (isPowerUpItem(item.type)) {
       final powerUpType =
-          _powerUpTypeFor(
-        item.type,
-      );
+          _powerUpTypeFor(item.type);
 
       if (powerUpType != null) {
         itemEngine.activatePowerUp(
@@ -453,21 +419,18 @@ class RunnerEngine {
   ) {
     switch (type) {
       case PowerUpType.magnet:
-        AudioManager.instance
-            .playMagnetActivate();
+        AudioManager.instance.playMagnetActivate();
         break;
 
       case PowerUpType.shield:
         break;
 
       case PowerUpType.speedBoost:
-        AudioManager.instance
-            .playSpeedBoost();
+        AudioManager.instance.playSpeedBoost();
         break;
 
       case PowerUpType.invincibility:
-        AudioManager.instance
-            .playInvincibility();
+        AudioManager.instance.playInvincibility();
         break;
     }
   }
@@ -491,8 +454,7 @@ class RunnerEngine {
   // ---------------------------------------------------------------------------
 
   void _applyHit() {
-    if (_hitInvulnerabilitySeconds >
-        0) {
+    if (_hitInvulnerabilitySeconds > 0) {
       return;
     }
 
@@ -502,8 +464,7 @@ class RunnerEngine {
     if (shieldAbsorbed) {
       runner.hasShield = false;
 
-      AudioManager.instance
-          .playShieldBreak();
+      AudioManager.instance.playShieldBreak();
 
       return;
     }
@@ -516,20 +477,16 @@ class RunnerEngine {
     levelEngine.registerHit();
 
     if (lostLife) {
-      AudioManager.instance
-          .playPlayerHit();
+      AudioManager.instance.playPlayerHit();
 
       cameraEngine.shake(
         durationSeconds:
-            GameConstants
-                .cameraShakeDurationSeconds,
+            GameConstants.cameraShakeDurationSeconds,
         magnitude:
-            GameConstants
-                .cameraShakeMagnitude,
+            GameConstants.cameraShakeMagnitude,
       );
 
-      _hitInvulnerabilitySeconds =
-          1.0;
+      _hitInvulnerabilitySeconds = 1.0;
 
       if (runner.lives <= 0) {
         endReason =
@@ -552,11 +509,12 @@ class RunnerEngine {
       distanceMeters =
           checkpoint.distance;
 
+      // Prevent the next frame from treating the respawn itself as a
+      // giant distance crossing.
       previousDistanceMeters =
           distanceMeters;
 
-      AudioManager.instance
-          .playCheckpoint();
+      AudioManager.instance.playCheckpoint();
     }
   }
 
@@ -565,15 +523,12 @@ class RunnerEngine {
   // ---------------------------------------------------------------------------
 
   void _checkEndConditions() {
-    if (endReason !=
-        RunEndReason.none) {
+    if (endReason != RunEndReason.none) {
       return;
     }
 
-    if (levelEngine
-        .progress.isComplete) {
-      scoreEngine
-          .registerLevelCompletion();
+    if (levelEngine.progress.isComplete) {
+      scoreEngine.registerLevelCompletion();
 
       endReason =
           RunEndReason.levelComplete;
@@ -581,14 +536,12 @@ class RunnerEngine {
       runner.state =
           RunnerState.celebrating;
 
-      AudioManager.instance
-          .playLevelComplete();
+      AudioManager.instance.playLevelComplete();
     } else if (runner.lives <= 0) {
       endReason =
           RunEndReason.gameOver;
 
-      AudioManager.instance
-          .playGameOver();
+      AudioManager.instance.playGameOver();
     }
   }
 
@@ -598,7 +551,6 @@ class RunnerEngine {
 
   void reset() {
     distanceMeters = 0;
-
     previousDistanceMeters = 0;
 
     _spawnedSegmentCount = 0;
@@ -609,18 +561,17 @@ class RunnerEngine {
     _hitInvulnerabilitySeconds = 0;
 
     scoreEngine.reset();
-
     obstacleEngine.reset();
-
     itemEngine.reset();
-
     cameraEngine.reset();
 
-    // Restore runner state.
     runner.lives =
         GameConstants.startingLives;
 
     runner.state =
         RunnerState.running;
+
+    // Recreate the initial track content after reset.
+    _spawnUpcomingSegments();
   }
 }
