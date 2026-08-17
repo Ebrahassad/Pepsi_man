@@ -70,7 +70,7 @@ Add a `LevelModel` in `level_data.dart` with `id`, `worldId`, `difficulty`, `dis
 
 1. Add a value to the `ObstacleType` enum in `obstacle_model.dart`.
 2. Add its config (jump/slide requirement, lane behavior) in `obstacle_data.dart`.
-3. Drop the art asset at `assets/images/obstacles/<name>.png` and list it in `ASSET_MANIFEST.md`.
+3. Drop the art asset at `assets/images/obstacles/<name>.webp` and list it in `ASSET_MANIFEST.md`.
 
 ## Adding an Item / Power-Up
 
@@ -78,7 +78,7 @@ Same pattern as obstacles: extend `ItemType` or `PowerUpType`, add config in `it
 
 ## Changing the Character
 
-Replace the `runner_*.png` files under `assets/images/characters/runner/` (same filenames) or point `RunnerModel`'s asset paths at a new folder. No engine code needs to change since physics/animation states are name-independent.
+Replace the `runner_*.webp` files under `assets/images/characters/runner/` (same filenames) or point `RunnerModel`'s asset paths at a new folder. No engine code needs to change since physics/animation states are name-independent.
 
 ## Changing Audio
 

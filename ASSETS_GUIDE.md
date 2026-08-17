@@ -12,67 +12,67 @@
 
 | الملف | الأبعاد المقترحة | يُستخدم متى |
 |---|---|---|
-| runner_idle.png | 220×220 | قبل بدء الجري (شاشة البداية) |
-| runner_run_01.png | 220×220 | إطار جري 1 (يتكرر مع 02 و03) |
-| runner_run_02.png | 220×220 | إطار جري 2 |
-| runner_run_03.png | 220×220 | إطار جري 3 |
-| runner_jump.png | 220×220 | أثناء القفز |
-| runner_slide.png | 220×220 | أثناء الانزلاق (أعرض وأقصر) |
-| runner_hit.png | 220×220 | عند الاصطدام |
-| runner_celebrate.png | 220×220 | عند إنهاء المرحلة بنجاح |
+| runner_idle.webp | 220×220 | قبل بدء الجري (شاشة البداية) |
+| runner_run_01.webp | 220×220 | إطار جري 1 (يتكرر مع 02 و03) |
+| runner_run_02.webp | 220×220 | إطار جري 2 |
+| runner_run_03.webp | 220×220 | إطار جري 3 |
+| runner_jump.webp | 220×220 | أثناء القفز |
+| runner_slide.webp | 220×220 | أثناء الانزلاق (أعرض وأقصر) |
+| runner_hit.webp | 220×220 | عند الاصطدام |
+| runner_celebrate.webp | 220×220 | عند إنهاء المرحلة بنجاح |
 
 ### ب. العوائق — `assets/images/obstacles/`
 
 | الملف | الأبعاد المقترحة | ملاحظة |
 |---|---|---|
-| car.png | 180×220 | |
-| truck.png | 220×280 | |
-| bus.png | 240×300 | |
-| barrier.png | 160×120 | يُقفز فوقها |
-| cone.png | 80×90 | يُقفز فوقها |
-| trash_bin.png | 110×130 | تظهر فجأة من الجانب |
-| construction_barrier.png | 180×120 | يُقفز فوقها |
-| container.png | 260×260 | |
-| gate.png | 280×200 | يُنزلق تحتها |
-| road_block.png | 200×110 | يُقفز فوقها |
+| car.webp | 180×220 | |
+| truck.webp | 220×280 | |
+| bus.webp | 240×300 | |
+| barrier.webp | 160×120 | يُقفز فوقها |
+| cone.webp | 80×90 | يُقفز فوقها |
+| trash_bin.webp | 110×130 | تظهر فجأة من الجانب |
+| construction_barrier.webp | 180×120 | يُقفز فوقها |
+| container.webp | 260×260 | |
+| gate.webp | 280×200 | يُنزلق تحتها |
+| road_block.webp | 200×110 | يُقفز فوقها |
 
 ### ج. العناصر القابلة للجمع والقوى الخاصة — `assets/images/items/`
 
 | الملف | الأبعاد | النوع |
 |---|---|---|
-| energy_can.png | 88×88 | جمع أساسي |
-| bonus_can.png | 88×88 | جمع بقيمة أعلى |
-| coin.png | 88×88 | جمع |
-| magnet.png | 88×88 | قوة خاصة |
-| shield.png | 88×88 | قوة خاصة |
-| speed_boost.png | 88×88 | قوة خاصة |
-| invincibility.png | 88×88 | قوة خاصة |
+| energy_can.webp | 88×88 | جمع أساسي |
+| bonus_can.webp | 88×88 | جمع بقيمة أعلى |
+| coin.webp | 88×88 | جمع |
+| magnet.webp | 88×88 | قوة خاصة |
+| shield.webp | 88×88 | قوة خاصة |
+| speed_boost.webp | 88×88 | قوة خاصة |
+| invincibility.webp | 88×88 | قوة خاصة |
 
 ### د. واجهة المستخدم — `assets/images/ui/`
 
 | الملف | الأبعاد | الاستخدام |
 |---|---|---|
-| game_logo.png | 440×180 | شعار اللعبة (Splash + القائمة الرئيسية) |
-| play_button.png | 240×90 | زر تشغيل بديل (اختياري، الأزرار الحالية مرسومة برمجيًا) |
-| pause_button.png | 90×90 | |
-| replay_button.png | 240×90 | |
-| home_button.png | 240×90 | |
-| next_button.png | 240×90 | |
-| lock.png | 72×72 | قفل المرحلة |
-| star.png | 56×56 | نجمة ممتلئة |
-| star_empty.png | 56×56 | نجمة فارغة |
-| coin_icon.png | 48×48 | أيقونة HUD |
-| can_icon.png | 48×48 | أيقونة HUD |
-| life_icon.png | 48×48 | أيقونة HUD |
-| checkpoint.png | 56×56 | علامة نقطة تفتيش |
+| game_logo.webp | 440×180 | شعار اللعبة (Splash + القائمة الرئيسية) |
+| play_button.webp | 240×90 | زر تشغيل بديل (اختياري، الأزرار الحالية مرسومة برمجيًا) |
+| pause_button.webp | 90×90 | |
+| replay_button.webp | 240×90 | |
+| home_button.webp | 240×90 | |
+| next_button.webp | 240×90 | |
+| lock.webp | 72×72 | قفل المرحلة |
+| star.webp | 56×56 | نجمة ممتلئة |
+| star_empty.webp | 56×56 | نجمة فارغة |
+| coin_icon.webp | 48×48 | أيقونة HUD |
+| can_icon.webp | 48×48 | أيقونة HUD |
+| life_icon.webp | 48×48 | أيقونة HUD |
+| checkpoint.webp | 56×56 | علامة نقطة تفتيش |
 
 ### هـ. الخلفيات — `assets/images/backgrounds/` (1080×1920 عمودي، معتمة)
 
-splash_background.png · main_menu_background.png · world_map_background.png · city_background.png · highway_background.png · downtown_background.png · industrial_background.png · extreme_city_background.png · victory_background.png · game_over_background.png
+splash_background.webp · main_menu_background.webp · world_map_background.webp · city_background.webp · highway_background.webp · downtown_background.webp · industrial_background.webp · extreme_city_background.webp · victory_background.webp · game_over_background.webp
 
 ### و. أيقونات العوالم — `assets/images/worlds/` (320×320، معتمة)
 
-world_01.png (شوارع المدينة) · world_02.png (الطريق السريع) · world_03.png (وسط المدينة) · world_04.png (المنطقة الصناعية) · world_05.png (المدينة القصوى)
+world_01.webp (شوارع المدينة) · world_02.webp (الطريق السريع) · world_03.webp (وسط المدينة) · world_04.webp (المنطقة الصناعية) · world_05.webp (المدينة القصوى)
 
 ---
 
@@ -122,7 +122,7 @@ world_01.png (شوارع المدينة) · world_02.png (الطريق السر�
    flutter clean
    flutter pub get
    ```
-3. إن أضفت ملفًا بامتداد مختلف (مثلاً `.jpg` بدل `.png`، أو `.wav`/`.ogg` بدل `.mp3`) يجب تحديث المسار المطابق في:
+3. إن أضفت ملفًا بامتداد مختلف (مثلاً `.jpg` بدل `.webp`، أو `.wav`/`.ogg` بدل `.mp3`) يجب تحديث المسار المطابق في:
    - `ASSET_MANIFEST.md` / `AUDIO_MANIFEST.md` (للتوثيق فقط)
-   - مكان الاستخدام في الكود (`RunnerModel`, `ObstacleData`, `ItemData`, `AudioManager`, إلخ) — أو ببساطة أعد تسمية ملفك الجديد بنفس الامتداد `.png`/`.mp3` لتفادي أي تعديل كود.
+   - مكان الاستخدام في الكود (`RunnerModel`, `ObstacleData`, `ItemData`, `AudioManager`, إلخ) — أو ببساطة أعد تسمية ملفك الجديد بنفس الامتداد `.webp`/`.mp3` لتفادي أي تعديل كود.
 4. إذا نسيت أو تأخرت في إضافة صورة، **لن يتعطل التطبيق** — كل صورة لها رسم بديل (Fallback Painter) مبرمج بـ Canvas يظهر تلقائيًا.
