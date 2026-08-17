@@ -3,11 +3,11 @@ import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/audio/audio_manager.dart';
-import '../../../core/constants/game_constants.dart';
 import '../controllers/input_controller.dart';
 import '../controllers/runner_controller.dart';
 import '../data/world_data.dart';
 import '../engine/runner_engine.dart';
+import '../engine/track_geometry.dart';
 import '../managers/settings_manager.dart';
 import '../models/level_model.dart';
 import '../models/obstacle_model.dart';
@@ -16,7 +16,6 @@ import '../widgets/hud_widget.dart';
 import '../widgets/item_widget.dart';
 import '../widgets/obstacle_widget.dart';
 import '../widgets/runner_widget.dart';
-import '../widgets/track_painter.dart';
 import 'game_over_screen.dart';
 import 'pause_screen.dart';
 import 'victory_screen.dart';
@@ -24,7 +23,10 @@ import 'victory_screen.dart';
 class RunnerGameScreen extends StatefulWidget {
   final LevelModel level;
 
-  const RunnerGameScreen({super.key, required this.level});
+  const RunnerGameScreen({
+    super.key,
+    required this.level,
+  });
 
   @override
   State<RunnerGameScreen> createState() => _RunnerGameScreenState();
@@ -35,29 +37,52 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
   late final RunnerController _controller;
   late final InputController _input;
   late final Ticker _ticker;
+
   Offset _dragPosition = Offset.zero;
   bool _navigatedAway = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = RunnerController(level: widget.level);
-    final controlType = context.read<SettingsManager>().controlType;
-    _input = InputController(controlType: controlType);
 
-    final world = WorldData.byId(widget.level.worldId);
-    AudioManager.instance.playMusic(world.musicAsset);
+    _controller = RunnerController(
+      level: widget.level,
+    );
+
+    final controlType =
+        context.read<SettingsManager>().controlType;
+
+    _input = InputController(
+      controlType: controlType,
+    );
+
+    final world = WorldData.byId(
+      widget.level.worldId,
+    );
+
+    AudioManager.instance.playMusic(
+      world.musicAsset,
+    );
+
     AudioManager.instance.playLevelStart();
 
-    _ticker = createTicker(_onTick)..start();
-    _controller.addListener(_onEngineUpdate);
+    _ticker = createTicker(_onTick)
+      ..start();
+
+    _controller.addListener(
+      _onEngineUpdate,
+    );
   }
 
-  void _onTick(Duration elapsed) => _controller.tick(elapsed);
+  void _onTick(Duration elapsed) {
+    _controller.tick(elapsed);
+  }
 
   void _onEngineUpdate() {
     if (_navigatedAway) return;
+
     final reason = _controller.endReason;
+
     if (reason == RunEndReason.levelComplete) {
       _navigatedAway = true;
       _ticker.stop();
@@ -70,32 +95,48 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
   }
 
   void _goToVictory() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => VictoryScreen(level: widget.level, engine: _controller.engine),
-        ),
-      );
-    });
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) {
+        if (!mounted) return;
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => VictoryScreen(
+              level: widget.level,
+              engine: _controller.engine,
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _goToGameOver() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => GameOverScreen(level: widget.level, engine: _controller.engine),
-        ),
-      );
-    });
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) {
+        if (!mounted) return;
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => GameOverScreen(
+              level: widget.level,
+              engine: _controller.engine,
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _openPause() async {
     _controller.pause();
     _ticker.stop();
+
     final result = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => const PauseScreen(), fullscreenDialog: true),
+      MaterialPageRoute(
+        builder: (_) => const PauseScreen(),
+        fullscreenDialog: true,
+      ),
     );
 
     if (!mounted) return;
@@ -106,6 +147,7 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
         _navigatedAway = false;
         _ticker.start();
         break;
+
       case null:
       case 'resume':
       default:
@@ -117,49 +159,100 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
 
   @override
   void dispose() {
-    _controller.removeListener(_onEngineUpdate);
+    _controller.removeListener(
+      _onEngineUpdate,
+    );
+
     _ticker.dispose();
     _controller.dispose();
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final world = WorldData.byId(widget.level.worldId);
+    final world = WorldData.byId(
+      widget.level.worldId,
+    );
 
     return Scaffold(
       body: GestureDetector(
         onPanStart: _input.onPanStart,
-        onPanUpdate: (details) => _dragPosition = details.globalPosition,
+        onPanUpdate: (details) {
+          _dragPosition = details.globalPosition;
+        },
         onPanEnd: (details) {
-          final action = _input.onPanEnd(details, _dragPosition);
-          if (action != null) _controller.handleInput(action);
+          final action = _input.onPanEnd(
+            details,
+            _dragPosition,
+          );
+
+          if (action != null) {
+            _controller.handleInput(action);
+          }
         },
         child: AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
             final engine = _controller.engine;
+
+            final cameraX =
+                engine.cameraEngine.offsetX;
+
+            final cameraY =
+                engine.cameraEngine.offsetY;
+
             return Stack(
               fit: StackFit.expand,
               children: [
+                // ---------------------------------------------------------
+                // WORLD BACKGROUND
+                // ---------------------------------------------------------
                 Image.asset(
                   world.backgroundAsset,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(color: Colors.black),
+                  errorBuilder:
+                      (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.black,
+                    );
+                  },
                 ),
+
+                // ---------------------------------------------------------
+                // GAME OBJECTS
+                //
+                // The background remains completely untouched by camera
+                // shake. Only gameplay objects move with the camera.
+                // ---------------------------------------------------------
                 Transform.translate(
-                  offset: Offset(engine.cameraEngine.offsetX, engine.cameraEngine.offsetY),
-                  child: CustomPaint(
-                    painter: TrackPainter(
-                      depthScroll: engine.cameraEngine.depthScroll,
-                      speedFactor: engine.physics.forwardSpeed / GameConstants.defaultMaxSpeed,
-                    ),
-                    child: const SizedBox.expand(),
+                  offset: Offset(
+                    cameraX,
+                    cameraY,
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ..._buildTrackObjects(
+                        context,
+                        engine,
+                      ),
+
+                      _buildRunner(
+                        context,
+                        engine,
+                      ),
+                    ],
                   ),
                 ),
-                ..._buildTrackObjects(context, engine),
-                _buildRunner(context, engine),
-                HudWidget(engine: engine, onPause: _openPause),
+
+                // ---------------------------------------------------------
+                // HUD
+                // ---------------------------------------------------------
+                HudWidget(
+                  engine: engine,
+                  onPause: _openPause,
+                ),
               ],
             );
           },
@@ -168,65 +261,173 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
     );
   }
 
-  Widget _buildRunner(BuildContext context, RunnerEngine engine) {
+  // -----------------------------------------------------------------------
+  // RUNNER
+  // -----------------------------------------------------------------------
+
+  Widget _buildRunner(
+    BuildContext context,
+    RunnerEngine engine,
+  ) {
     final size = MediaQuery.of(context).size;
-    final laneX = _laneToX(size.width, engine.physics.lanePosition);
-    final groundY = size.height * 0.78;
-    final jumpOffset = engine.physics.verticalPosition * 0.4;
+
+    final laneX = TrackGeometry.laneX(
+      size.width,
+      engine.physics.lanePosition,
+      1.0,
+    );
+
+    final groundY = TrackGeometry.groundY(
+      size.height,
+    );
+
+    final jumpOffset =
+        engine.physics.verticalPosition * 0.4;
 
     return Positioned(
       left: laneX - 45,
       top: groundY + jumpOffset - 90,
-      child: RunnerWidget(state: engine.runner.state),
+      child: RunnerWidget(
+        state: engine.runner.state,
+      ),
     );
   }
 
-  List<Widget> _buildTrackObjects(BuildContext context, RunnerEngine engine) {
+  // -----------------------------------------------------------------------
+  // TRACK OBJECTS
+  // -----------------------------------------------------------------------
+
+  List<Widget> _buildTrackObjects(
+    BuildContext context,
+    RunnerEngine engine,
+  ) {
     final size = MediaQuery.of(context).size;
+
     final widgets = <Widget>[];
 
-    for (final ObstacleInstance obstacle in engine.obstacleEngine.active) {
-      if (!obstacle.hasAppeared) continue;
-      final relative = obstacle.distance - engine.distanceMeters;
-      if (relative < -2 || relative > 45) continue;
-      final t = (1 - (relative / 45)).clamp(0.05, 1.0);
-      final scale = 0.4 + t * 0.9;
-      final x = _laneToX(size.width, obstacle.lane.toDouble()) - (40 * scale);
-      final y = size.height * (0.25 + 0.53 * t) - (40 * scale);
+    // ---------------------------------------------------------------
+    // Visibility window
+    //
+    // This is deliberately kept generous for now.
+    // Spawn/physics speed correction will be handled separately.
+    // ---------------------------------------------------------------
+
+    const visibilityWindow = 45.0;
+
+    // ---------------------------------------------------------------
+    // OBSTACLES
+    // ---------------------------------------------------------------
+
+    for (final ObstacleInstance obstacle
+        in engine.obstacleEngine.active) {
+      if (!obstacle.hasAppeared) {
+        continue;
+      }
+
+      final relative =
+          obstacle.distance -
+          engine.distanceMeters;
+
+      if (relative < -2 ||
+          relative > visibilityWindow) {
+        continue;
+      }
+
+      // t = 0 -> far away
+      // t = 1 -> close to player
+      final t = (
+        1 -
+        (relative / visibilityWindow)
+      ).clamp(
+        0.05,
+        1.0,
+      );
+
+      final scale =
+          0.4 + t * 0.9;
+
+      final x = TrackGeometry.laneX(
+            size.width,
+            obstacle.lane.toDouble(),
+            t,
+          ) -
+          (40 * scale);
+
+      final y =
+          TrackGeometry.depthY(
+            size.height,
+            t,
+          ) -
+          (40 * scale);
 
       widgets.add(
         Positioned(
           left: x,
           top: y,
-          child: ObstacleWidget(instance: obstacle, scale: scale),
+          child: ObstacleWidget(
+            instance: obstacle,
+            scale: scale,
+          ),
         ),
       );
     }
 
-    for (final ItemInstance item in engine.itemEngine.active) {
-      if (item.isCollected) continue;
-      final relative = item.distance - engine.distanceMeters;
-      if (relative < -2 || relative > 45) continue;
-      final t = (1 - (relative / 45)).clamp(0.05, 1.0);
-      final scale = 0.4 + t * 0.9;
-      final x = _laneToX(size.width, item.lane.toDouble()) - (22 * scale);
-      final y = size.height * (0.3 + 0.48 * t) - (22 * scale);
+    // ---------------------------------------------------------------
+    // ITEMS
+    // ---------------------------------------------------------------
+
+    for (final ItemInstance item
+        in engine.itemEngine.active) {
+      if (item.isCollected) {
+        continue;
+      }
+
+      final relative =
+          item.distance -
+          engine.distanceMeters;
+
+      if (relative < -2 ||
+          relative > visibilityWindow) {
+        continue;
+      }
+
+      final t = (
+        1 -
+        (relative / visibilityWindow)
+      ).clamp(
+        0.05,
+        1.0,
+      );
+
+      final scale =
+          0.4 + t * 0.9;
+
+      final x = TrackGeometry.laneX(
+            size.width,
+            item.lane.toDouble(),
+            t,
+          ) -
+          (22 * scale);
+
+      final y =
+          TrackGeometry.depthY(
+            size.height,
+            t,
+          ) -
+          (22 * scale);
 
       widgets.add(
         Positioned(
           left: x,
           top: y,
-          child: ItemWidget(instance: item, scale: scale),
+          child: ItemWidget(
+            instance: item,
+            scale: scale,
+          ),
         ),
       );
     }
 
     return widgets;
-  }
-
-  double _laneToX(double screenWidth, double lanePosition) {
-    // lanePosition: 0 (left) .. 2 (right)
-    final laneCenterFraction = 0.28 + (lanePosition / 2) * 0.44;
-    return screenWidth * laneCenterFraction;
   }
 }
