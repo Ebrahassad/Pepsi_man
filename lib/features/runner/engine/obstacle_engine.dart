@@ -6,19 +6,24 @@ import '../models/track_segment.dart';
 import '../data/obstacle_data.dart';
 import 'object_pool.dart';
 
-/// Manages the set of active obstacles for the current run. Backed by a
-/// real [ObjectPool] (per rule 47: never allocate thousands of objects at
-/// runtime) — spawning acquires a recycled [ObstacleInstance] instead of
-/// calling `ObstacleInstance(...)` directly, and obstacles that fall
-/// behind the player are released back to the pool instead of being left
-/// for the garbage collector.
+/// Manages active obstacles for the current run.
+///
+/// Obstacles are pooled and recycled. Visibility/collision lookup ranges
+/// scale with the runner's current speed so fast levels do not become
+/// impossible simply because the engine uses small fixed distance windows.
 class ObstacleEngine {
   final List<ObstacleInstance> active = [];
+
   final Random _random = Random();
 
-  late final ObjectPool<ObstacleInstance> _pool = ObjectPool<ObstacleInstance>(
+  late final ObjectPool<ObstacleInstance> _pool =
+      ObjectPool<ObstacleInstance>(
     size: GameConstants.obstaclePoolSize,
-    factory: () => ObstacleInstance(type: ObstacleType.car, lane: 1, distance: 0),
+    factory: () => ObstacleInstance(
+      type: ObstacleType.car,
+      lane: 1,
+      distance: 0,
+    ),
     reset: (o) {
       o.isHit = false;
       o.isPassed = false;
@@ -27,34 +32,73 @@ class ObstacleEngine {
     },
   );
 
-  void spawnFromSegment(TrackSegment segment, double segmentStartDistance) {
+  // ---------------------------------------------------------------------------
+  // SPAWN
+  // ---------------------------------------------------------------------------
+
+  void spawnFromSegment(
+    TrackSegment segment,
+    double segmentStartDistance,
+  ) {
     for (final template in segment.obstacles) {
-      final config = ObstacleData.all[template.type];
+      final config =
+          ObstacleData.all[template.type];
+
       final instance = _pool.acquire();
+
       instance.type = template.type;
       instance.lane = template.lane;
-      instance.distance = segmentStartDistance + template.distance;
+      instance.distance =
+          segmentStartDistance +
+              template.distance;
+
       instance.isHit = false;
       instance.isPassed = false;
       instance.motionTimer = 0;
-      instance.hasAppeared = config?.motion != ObstacleMotion.sideAppear;
+
+      instance.hasAppeared =
+          config?.motion !=
+              ObstacleMotion.sideAppear;
+
       active.add(instance);
     }
   }
 
-  void update(double dt, double runnerDistance, double forwardSpeed) {
+  // ---------------------------------------------------------------------------
+  // UPDATE
+  // ---------------------------------------------------------------------------
+
+  void update(
+    double dt,
+    double runnerDistance,
+    double forwardSpeed,
+  ) {
+    if (dt <= 0) return;
+
     for (final obstacle in active) {
-      final config = ObstacleData.all[obstacle.type];
-      if (config == null) continue;
+      final config =
+          ObstacleData.all[obstacle.type];
+
+      if (config == null) {
+        continue;
+      }
 
       switch (config.motion) {
         case ObstacleMotion.movingLaneChange:
-          // Periodically shifts one lane left/right, staying in bounds.
           obstacle.motionTimer += dt;
+
           if (obstacle.motionTimer >= 1.8) {
             obstacle.motionTimer = 0;
-            final direction = _random.nextBool() ? 1 : -1;
-            obstacle.lane = (obstacle.lane + direction).clamp(
+
+            final direction =
+                _random.nextBool()
+                    ? 1
+                    : -1;
+
+            obstacle.lane =
+                (obstacle.lane +
+                        direction)
+                    .clamp(
               GameConstants.laneLeft,
               GameConstants.laneRight,
             );
@@ -62,55 +106,121 @@ class ObstacleEngine {
           break;
 
         case ObstacleMotion.crossLane:
-          // Sweeps continuously across all 3 lanes, faster than a plain
-          // lane change, to force an active dodge.
           obstacle.motionTimer += dt;
+
           if (obstacle.motionTimer >= 0.9) {
             obstacle.motionTimer = 0;
-            obstacle.lane = (obstacle.lane + 1) % 3;
+
+            obstacle.lane =
+                (obstacle.lane + 1) % 3;
           }
           break;
 
         case ObstacleMotion.movingTowardPlayer:
-          obstacle.distance -= forwardSpeed * dt * 0.15;
+          obstacle.distance -=
+              forwardSpeed * dt * 0.15;
           break;
 
         case ObstacleMotion.sideAppear:
-          // Stays invisible/non-collidable until the player gets close,
-          // then "appears" suddenly from the side.
-          final relative = obstacle.distance - runnerDistance;
-          obstacle.hasAppeared = relative < 12;
+          // The old value was a fixed 12 units.
+          // At high speed that is almost instantaneous.
+          //
+          // Keep approximately one second of reaction distance.
+          final appearanceDistance =
+              (forwardSpeed * 1.0)
+                  .clamp(120.0, 650.0);
+
+          final relative =
+              obstacle.distance -
+                  runnerDistance;
+
+          obstacle.hasAppeared =
+              relative <
+                  appearanceDistance;
           break;
 
         case ObstacleMotion.static_:
           break;
       }
 
-      if (obstacle.distance < runnerDistance - 5 && !obstacle.isPassed) {
+      if (obstacle.distance <
+              runnerDistance - 5 &&
+          !obstacle.isPassed) {
         obstacle.isPassed = true;
       }
     }
 
-    final toRelease = active.where((o) => o.distance < runnerDistance - 20).toList();
+    // -------------------------------------------------------------------------
+    // POOL CLEANUP
+    // -------------------------------------------------------------------------
+
+    final releaseDistance =
+        runnerDistance - 80;
+
+    final toRelease = active
+        .where(
+          (o) =>
+              o.distance <
+              releaseDistance,
+        )
+        .toList();
+
     for (final obstacle in toRelease) {
       active.remove(obstacle);
       _pool.release(obstacle);
     }
   }
 
-  List<ObstacleInstance> obstaclesNear(double runnerDistance, {double range = 15}) {
+  // ---------------------------------------------------------------------------
+  // LOOKUP
+  // ---------------------------------------------------------------------------
+
+  List<ObstacleInstance> obstaclesNear(
+    double runnerDistance, {
+    double? range,
+    double forwardSpeed =
+        GameConstants.defaultBaseSpeed,
+  }) {
+    // The old range was 15 units.
+    //
+    // At 650 units/s the player can travel a very large distance between
+    // meaningful gameplay moments, so the lookup window must scale with speed.
+    final effectiveRange =
+        (range ??
+                (forwardSpeed * 0.35))
+            .clamp(60.0, 300.0);
+
     return active
-        .where((o) => o.hasAppeared && (o.distance - runnerDistance).abs() <= range)
+        .where(
+          (o) =>
+              o.hasAppeared &&
+              (o.distance -
+                          runnerDistance)
+                      .abs() <=
+                  effectiveRange,
+        )
         .toList();
   }
+
+  // ---------------------------------------------------------------------------
+  // RESET
+  // ---------------------------------------------------------------------------
 
   void reset() {
     for (final obstacle in active) {
       _pool.release(obstacle);
     }
+
     active.clear();
   }
 
-  int get pooledCount => _pool.totalCount;
-  int get activePoolUsage => _pool.activeCount;
+  // ---------------------------------------------------------------------------
+  // POOL INFO
+  // ---------------------------------------------------------------------------
+
+  int get pooledCount =>
+      _pool.totalCount;
+
+  int get activePoolUsage =>
+      _pool.activeCount;
 }
