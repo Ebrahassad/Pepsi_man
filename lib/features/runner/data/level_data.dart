@@ -29,16 +29,16 @@ class LevelData {
             (worldId - 1) * 300.0 +
             (index - 1) * 60.0;
 
-        final baseSpeed = GameConstants.defaultBaseSpeed +
-            (worldId - 1) * 40.0 +
-            (index - 1) * 6.0;
+final baseSpeed = GameConstants.defaultBaseSpeed +
+    (worldId - 1) * 25.0 +
+    (index - 1) * 3.0;
 
-        final maxSpeed = GameConstants.defaultMaxSpeed +
-            (worldId - 1) * 60.0 +
-            (index - 1) * 8.0;
+final maxSpeed = GameConstants.defaultMaxSpeed +
+    (worldId - 1) * 35.0 +
+    (index - 1) * 4.0;
 
-        final acceleration = GameConstants.defaultAcceleration +
-            (worldId - 1) * 0.6;
+final acceleration = GameConstants.defaultAcceleration +
+    (worldId - 1) * 0.4;
 
         // Cycle through goal types so variety matches the request's examples
         // (reach distance / collect cans / collect coins / survive / no-death).
