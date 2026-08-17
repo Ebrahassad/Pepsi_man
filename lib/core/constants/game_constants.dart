@@ -25,6 +25,17 @@ class GameConstants {
 static const double defaultBaseSpeed = 260.0;
 static const double defaultMaxSpeed = 650.0;
 static const double defaultAcceleration = 4.0;
+
+// Track perspective calibration
+static const double trackTopLeftXFraction = 0.42;
+static const double trackTopRightXFraction = 0.58;
+
+static const double trackBottomLeftXFraction = 0.02;
+static const double trackBottomRightXFraction = 0.98;
+
+static const double trackHorizonYFraction = 0.28;
+static const double trackGroundYFraction = 0.78;
+
   
   // Lives
   static const int startingLives = 3;
