@@ -211,8 +211,8 @@ class _RunnerGameScreenState
                 // BACKGROUND
                 // -----------------------------------------------------------
                 //
-                // The background artwork is now the visible road/environment.
-                // No procedural road is painted over it.
+                // The background contains the actual visible road.
+                // No procedural road is painted here.
                 //
                 Image.asset(
                   world.backgroundAsset,
@@ -226,11 +226,11 @@ class _RunnerGameScreenState
                 ),
 
                 // -----------------------------------------------------------
-                // TRACK OBJECTS + RUNNER
+                // GAME OBJECTS
                 // -----------------------------------------------------------
                 //
-                // Camera shake affects gameplay objects only.
-                // The background remains stable.
+                // Camera shake affects only the runner and gameplay objects.
+                // The background stays completely stable.
                 //
                 Transform.translate(
                   offset: Offset(
@@ -281,9 +281,12 @@ class _RunnerGameScreenState
     const double runnerWidth = 90.0;
     const double runnerHeight = 90.0;
 
-    final t = 1.0;
+    // The runner is always at the nearest depth.
+    // This keeps the player visually fixed in the playable area.
+    const double t = 1.0;
 
-    final laneX = TrackGeometry.laneX(
+    final laneX =
+        TrackGeometry.laneX(
       size.width,
       engine.physics.lanePosition,
       t,
@@ -299,15 +302,18 @@ class _RunnerGameScreenState
             0.4;
 
     return Positioned(
-      left: laneX -
+      left:
+          laneX -
           runnerWidth / 2,
-      top: groundY +
+      top:
+          groundY +
           jumpOffset -
           runnerHeight,
       width: runnerWidth,
       height: runnerHeight,
       child: RunnerWidget(
-        state: engine.runner.state,
+        state:
+            engine.runner.state,
       ),
     );
   }
@@ -323,23 +329,29 @@ class _RunnerGameScreenState
     final size =
         MediaQuery.of(context).size;
 
-    final widgets = <Widget>[];
+    final widgets =
+        <Widget>[];
 
     final speed =
         engine.physics.forwardSpeed;
 
     // ---------------------------------------------------------
-    // Dynamic visibility window.
+    // Visibility window
     // ---------------------------------------------------------
     //
-    // The old value was fixed at 45 units.
-    // At higher speeds that made objects appear too late.
+    // The distance scales with speed so fast gameplay does not
+    // cause objects to appear too late.
     //
-    const double visibilityTimeSeconds = 2.2;
+    const double visibilityTimeSeconds =
+        2.2;
 
     final visibilityWindow =
-        (speed * visibilityTimeSeconds)
-            .clamp(180.0, 1400.0);
+        (speed *
+                visibilityTimeSeconds)
+            .clamp(
+      180.0,
+      1400.0,
+    );
 
     // ---------------------------------------------------------
     // OBSTACLES
@@ -355,14 +367,15 @@ class _RunnerGameScreenState
 
       final relative =
           obstacle.distance -
-              engine.distanceMeters;
+          engine.distanceMeters;
 
       if (relative < -20 ||
           relative > visibilityWindow) {
         continue;
       }
 
-      final t = _depthForRelative(
+      final t =
+          _depthForRelative(
         relative,
         visibilityWindow,
       );
@@ -378,6 +391,14 @@ class _RunnerGameScreenState
           ) -
           (40 * scale);
 
+      // IMPORTANT:
+      // Do NOT use the old:
+      //
+      // size.height * (0.25 + 0.53 * t)
+      //
+      // That created a much steeper artificial road.
+      //
+      // TrackGeometry now controls the vertical perspective.
       final y =
           TrackGeometry.depthY(
             size.height,
@@ -411,14 +432,15 @@ class _RunnerGameScreenState
 
       final relative =
           item.distance -
-              engine.distanceMeters;
+          engine.distanceMeters;
 
       if (relative < -20 ||
           relative > visibilityWindow) {
         continue;
       }
 
-      final t = _depthForRelative(
+      final t =
+          _depthForRelative(
         relative,
         visibilityWindow,
       );
@@ -462,16 +484,16 @@ class _RunnerGameScreenState
 
   /// Converts world distance into perspective depth.
   ///
-  /// t = 0 -> far / horizon
-  /// t = 1 -> near / player
+  /// t = 0 -> horizon / far
+  /// t = 1 -> player / near
   double _depthForRelative(
     double relative,
     double visibilityWindow,
   ) {
     final normalized =
         1 -
-            (relative /
-                visibilityWindow);
+        (relative /
+            visibilityWindow);
 
     return normalized.clamp(
       0.0,
@@ -480,12 +502,12 @@ class _RunnerGameScreenState
   }
 
   // ---------------------------------------------------------------------------
-  // OBJECT SCALE
+  // SCALE
   // ---------------------------------------------------------------------------
 
   double _objectScale(
     double t,
   ) {
-    return 0.4 + t * 0.9;
+    return 0.4 + (t * 0.9);
   }
 }
