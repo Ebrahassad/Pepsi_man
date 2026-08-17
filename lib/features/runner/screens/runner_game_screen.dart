@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/audio/audio_manager.dart';
+import '../../../core/constants/game_constants.dart';
 import '../controllers/input_controller.dart';
 import '../controllers/runner_controller.dart';
 import '../data/world_data.dart';
@@ -29,10 +30,12 @@ class RunnerGameScreen extends StatefulWidget {
   });
 
   @override
-  State<RunnerGameScreen> createState() => _RunnerGameScreenState();
+  State<RunnerGameScreen> createState() =>
+      _RunnerGameScreenState();
 }
 
-class _RunnerGameScreenState extends State<RunnerGameScreen>
+class _RunnerGameScreenState
+    extends State<RunnerGameScreen>
     with SingleTickerProviderStateMixin {
   late final RunnerController _controller;
   late final InputController _input;
@@ -56,9 +59,8 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
       controlType: controlType,
     );
 
-    final world = WorldData.byId(
-      widget.level.worldId,
-    );
+    final world =
+        WorldData.byId(widget.level.worldId);
 
     AudioManager.instance.playMusic(
       world.musicAsset,
@@ -81,13 +83,16 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
   void _onEngineUpdate() {
     if (_navigatedAway) return;
 
-    final reason = _controller.endReason;
+    final reason =
+        _controller.endReason;
 
-    if (reason == RunEndReason.levelComplete) {
+    if (reason ==
+        RunEndReason.levelComplete) {
       _navigatedAway = true;
       _ticker.stop();
       _goToVictory();
-    } else if (reason == RunEndReason.gameOver) {
+    } else if (reason ==
+        RunEndReason.gameOver) {
       _navigatedAway = true;
       _ticker.stop();
       _goToGameOver();
@@ -95,44 +100,43 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
   }
 
   void _goToVictory() {
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) {
-        if (!mounted) return;
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) {
+      if (!mounted) return;
 
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => VictoryScreen(
-              level: widget.level,
-              engine: _controller.engine,
-            ),
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => VictoryScreen(
+            level: widget.level,
+            engine: _controller.engine,
           ),
-        );
-      },
-    );
+        ),
+      );
+    });
   }
 
   void _goToGameOver() {
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) {
-        if (!mounted) return;
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) {
+      if (!mounted) return;
 
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => GameOverScreen(
-              level: widget.level,
-              engine: _controller.engine,
-            ),
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => GameOverScreen(
+            level: widget.level,
+            engine: _controller.engine,
           ),
-        );
-      },
-    );
+        ),
+      );
+    });
   }
 
   Future<void> _openPause() async {
     _controller.pause();
     _ticker.stop();
 
-    final result = await Navigator.of(context).push<String>(
+    final result =
+        await Navigator.of(context).push<String>(
       MaterialPageRoute(
         builder: (_) => const PauseScreen(),
         fullscreenDialog: true,
@@ -171,43 +175,45 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
 
   @override
   Widget build(BuildContext context) {
-    final world = WorldData.byId(
-      widget.level.worldId,
-    );
+    final world =
+        WorldData.byId(widget.level.worldId);
 
     return Scaffold(
       body: GestureDetector(
         onPanStart: _input.onPanStart,
         onPanUpdate: (details) {
-          _dragPosition = details.globalPosition;
+          _dragPosition =
+              details.globalPosition;
         },
         onPanEnd: (details) {
-          final action = _input.onPanEnd(
+          final action =
+              _input.onPanEnd(
             details,
             _dragPosition,
           );
 
           if (action != null) {
-            _controller.handleInput(action);
+            _controller.handleInput(
+              action,
+            );
           }
         },
         child: AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
-            final engine = _controller.engine;
-
-            final cameraX =
-                engine.cameraEngine.offsetX;
-
-            final cameraY =
-                engine.cameraEngine.offsetY;
+            final engine =
+                _controller.engine;
 
             return Stack(
               fit: StackFit.expand,
               children: [
-                // ---------------------------------------------------------
-                // WORLD BACKGROUND
-                // ---------------------------------------------------------
+                // -----------------------------------------------------------
+                // BACKGROUND
+                // -----------------------------------------------------------
+                //
+                // The background artwork is now the visible road/environment.
+                // No procedural road is painted over it.
+                //
                 Image.asset(
                   world.backgroundAsset,
                   fit: BoxFit.cover,
@@ -219,16 +225,17 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
                   },
                 ),
 
-                // ---------------------------------------------------------
-                // GAME OBJECTS
+                // -----------------------------------------------------------
+                // TRACK OBJECTS + RUNNER
+                // -----------------------------------------------------------
                 //
-                // The background remains completely untouched by camera
-                // shake. Only gameplay objects move with the camera.
-                // ---------------------------------------------------------
+                // Camera shake affects gameplay objects only.
+                // The background remains stable.
+                //
                 Transform.translate(
                   offset: Offset(
-                    cameraX,
-                    cameraY,
+                    engine.cameraEngine.offsetX,
+                    engine.cameraEngine.offsetY,
                   ),
                   child: Stack(
                     fit: StackFit.expand,
@@ -237,7 +244,6 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
                         context,
                         engine,
                       ),
-
                       _buildRunner(
                         context,
                         engine,
@@ -246,9 +252,9 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
                   ),
                 ),
 
-                // ---------------------------------------------------------
+                // -----------------------------------------------------------
                 // HUD
-                // ---------------------------------------------------------
+                // -----------------------------------------------------------
                 HudWidget(
                   engine: engine,
                   onPause: _openPause,
@@ -261,92 +267,111 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
     );
   }
 
-  // -----------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // RUNNER
-  // -----------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
   Widget _buildRunner(
     BuildContext context,
     RunnerEngine engine,
   ) {
-    final size = MediaQuery.of(context).size;
+    final size =
+        MediaQuery.of(context).size;
+
+    const double runnerWidth = 90.0;
+    const double runnerHeight = 90.0;
+
+    final t = 1.0;
 
     final laneX = TrackGeometry.laneX(
       size.width,
       engine.physics.lanePosition,
-      1.0,
+      t,
     );
 
-    final groundY = TrackGeometry.groundY(
+    final groundY =
+        TrackGeometry.groundY(
       size.height,
     );
 
     final jumpOffset =
-        engine.physics.verticalPosition * 0.4;
+        engine.physics.verticalPosition *
+            0.4;
 
     return Positioned(
-      left: laneX - 45,
-      top: groundY + jumpOffset - 90,
+      left: laneX -
+          runnerWidth / 2,
+      top: groundY +
+          jumpOffset -
+          runnerHeight,
+      width: runnerWidth,
+      height: runnerHeight,
       child: RunnerWidget(
         state: engine.runner.state,
       ),
     );
   }
 
-  // -----------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // TRACK OBJECTS
-  // -----------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
   List<Widget> _buildTrackObjects(
     BuildContext context,
     RunnerEngine engine,
   ) {
-    final size = MediaQuery.of(context).size;
+    final size =
+        MediaQuery.of(context).size;
 
     final widgets = <Widget>[];
 
-    // ---------------------------------------------------------------
-    // Visibility window
+    final speed =
+        engine.physics.forwardSpeed;
+
+    // ---------------------------------------------------------
+    // Dynamic visibility window.
+    // ---------------------------------------------------------
     //
-    // This is deliberately kept generous for now.
-    // Spawn/physics speed correction will be handled separately.
-    // ---------------------------------------------------------------
+    // The old value was fixed at 45 units.
+    // At higher speeds that made objects appear too late.
+    //
+    const double visibilityTimeSeconds = 2.2;
 
-    const visibilityWindow = 45.0;
+    final visibilityWindow =
+        (speed * visibilityTimeSeconds)
+            .clamp(180.0, 1400.0);
 
-    // ---------------------------------------------------------------
+    // ---------------------------------------------------------
     // OBSTACLES
-    // ---------------------------------------------------------------
+    // ---------------------------------------------------------
 
-    for (final ObstacleInstance obstacle
-        in engine.obstacleEngine.active) {
+    for (
+      final ObstacleInstance obstacle
+          in engine.obstacleEngine.active
+    ) {
       if (!obstacle.hasAppeared) {
         continue;
       }
 
       final relative =
           obstacle.distance -
-          engine.distanceMeters;
+              engine.distanceMeters;
 
-      if (relative < -2 ||
+      if (relative < -20 ||
           relative > visibilityWindow) {
         continue;
       }
 
-      // t = 0 -> far away
-      // t = 1 -> close to player
-      final t = (
-        1 -
-        (relative / visibilityWindow)
-      ).clamp(
-        0.05,
-        1.0,
+      final t = _depthForRelative(
+        relative,
+        visibilityWindow,
       );
 
       final scale =
-          0.4 + t * 0.9;
+          _objectScale(t);
 
-      final x = TrackGeometry.laneX(
+      final x =
+          TrackGeometry.laneX(
             size.width,
             obstacle.lane.toDouble(),
             t,
@@ -372,37 +397,37 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
       );
     }
 
-    // ---------------------------------------------------------------
+    // ---------------------------------------------------------
     // ITEMS
-    // ---------------------------------------------------------------
+    // ---------------------------------------------------------
 
-    for (final ItemInstance item
-        in engine.itemEngine.active) {
+    for (
+      final ItemInstance item
+          in engine.itemEngine.active
+    ) {
       if (item.isCollected) {
         continue;
       }
 
       final relative =
           item.distance -
-          engine.distanceMeters;
+              engine.distanceMeters;
 
-      if (relative < -2 ||
+      if (relative < -20 ||
           relative > visibilityWindow) {
         continue;
       }
 
-      final t = (
-        1 -
-        (relative / visibilityWindow)
-      ).clamp(
-        0.05,
-        1.0,
+      final t = _depthForRelative(
+        relative,
+        visibilityWindow,
       );
 
       final scale =
-          0.4 + t * 0.9;
+          _objectScale(t);
 
-      final x = TrackGeometry.laneX(
+      final x =
+          TrackGeometry.laneX(
             size.width,
             item.lane.toDouble(),
             t,
@@ -429,5 +454,38 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
     }
 
     return widgets;
+  }
+
+  // ---------------------------------------------------------------------------
+  // DEPTH
+  // ---------------------------------------------------------------------------
+
+  /// Converts world distance into perspective depth.
+  ///
+  /// t = 0 -> far / horizon
+  /// t = 1 -> near / player
+  double _depthForRelative(
+    double relative,
+    double visibilityWindow,
+  ) {
+    final normalized =
+        1 -
+            (relative /
+                visibilityWindow);
+
+    return normalized.clamp(
+      0.0,
+      1.0,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // OBJECT SCALE
+  // ---------------------------------------------------------------------------
+
+  double _objectScale(
+    double t,
+  ) {
+    return 0.4 + t * 0.9;
   }
 }
