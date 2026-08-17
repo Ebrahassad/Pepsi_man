@@ -310,11 +310,12 @@ class RunnerEngine {
     // -------------------------------------------------------------------------
 
     for (
-      final obstacle
-          in obstacleEngine.obstaclesNear(
-        distanceMeters,
-      )
-    ) {
+  final obstacle
+      in obstacleEngine.obstaclesNear(
+    distanceMeters,
+    forwardSpeed: physics.forwardSpeed,
+  )
+) {
       if (obstacle.isHit ||
           obstacle.isPassed) {
         continue;
@@ -352,11 +353,12 @@ class RunnerEngine {
             : 0.0;
 
     for (
-      final item
-          in itemEngine.itemsNear(
-        distanceMeters,
-      )
-    ) {
+  final item
+      in itemEngine.itemsNear(
+    distanceMeters,
+    forwardSpeed: physics.forwardSpeed,
+  )
+) {
       final collected =
           collisionEngine.checkItemCollected(
         item: item,
