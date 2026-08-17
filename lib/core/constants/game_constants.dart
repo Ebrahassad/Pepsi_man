@@ -27,15 +27,19 @@ static const double defaultMaxSpeed = 650.0;
 static const double defaultAcceleration = 4.0;
 
 // Track perspective calibration
-static const double trackTopLeftXFraction = 0.42;
-static const double trackTopRightXFraction = 0.58;
+//
+// Calibrated against the city background artwork.
+// t = 0 → distant/horizon
+// t = 1 → runner/ground area
 
-static const double trackBottomLeftXFraction = 0.02;
-static const double trackBottomRightXFraction = 0.98;
-
-static const double trackHorizonYFraction = 0.28;
+static const double trackHorizonYFraction = 0.68;
 static const double trackGroundYFraction = 0.78;
 
+static const double trackTopLeftXFraction = 0.48;
+static const double trackTopRightXFraction = 0.52;
+
+static const double trackBottomLeftXFraction = 0.18;
+static const double trackBottomRightXFraction = 0.82;
   
   // Lives
   static const int startingLives = 3;
