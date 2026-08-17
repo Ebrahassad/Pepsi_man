@@ -11,7 +11,7 @@ enum RunnerState {
 /// Represents RunnerHero — the player character.
 class RunnerModel {
   RunnerState state;
-  int lane;
+  int lane; // 0 = left, 1 = center, 2 = right
   int lives;
   bool isInvincible;
   bool hasShield;
@@ -28,6 +28,10 @@ class RunnerModel {
     this.isSpeedBoostActive = false,
   });
 
+  /// Fallback/static asset for each state.
+  ///
+  /// Animated states are handled by RunnerWidget using their
+  /// corresponding frame lists below.
   static const Map<RunnerState, String> assetByState = {
     RunnerState.idle:
         'assets/images/characters/runner/runner_run_01.webp',
@@ -45,6 +49,7 @@ class RunnerModel {
         'assets/images/characters/runner/runner_celebrate_01.webp',
   };
 
+  /// Running animation: 6 frames.
   static const List<String> runCycleAssets = [
     'assets/images/characters/runner/runner_run_01.webp',
     'assets/images/characters/runner/runner_run_02.webp',
@@ -54,6 +59,7 @@ class RunnerModel {
     'assets/images/characters/runner/runner_run_06.webp',
   ];
 
+  /// Jump animation: 4 frames.
   static const List<String> jumpCycleAssets = [
     'assets/images/characters/runner/runner_jump_01.webp',
     'assets/images/characters/runner/runner_jump_02.webp',
@@ -61,18 +67,21 @@ class RunnerModel {
     'assets/images/characters/runner/runner_jump_04.webp',
   ];
 
+  /// Slide animation: 3 frames.
   static const List<String> slideCycleAssets = [
     'assets/images/characters/runner/runner_slide_01.webp',
     'assets/images/characters/runner/runner_slide_02.webp',
     'assets/images/characters/runner/runner_slide_03.webp',
   ];
 
+  /// Hit animation: 3 frames.
   static const List<String> hitCycleAssets = [
     'assets/images/characters/runner/runner_hit_01.webp',
     'assets/images/characters/runner/runner_hit_02.webp',
     'assets/images/characters/runner/runner_hit_03.webp',
   ];
 
+  /// Celebration animation: 3 frames.
   static const List<String> celebrateCycleAssets = [
     'assets/images/characters/runner/runner_celebrate_01.webp',
     'assets/images/characters/runner/runner_celebrate_02.webp',
