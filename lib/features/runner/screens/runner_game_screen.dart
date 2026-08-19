@@ -3,7 +3,6 @@ import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/audio/audio_manager.dart';
-import '../../../core/constants/game_constants.dart';
 import '../controllers/input_controller.dart';
 import '../controllers/runner_controller.dart';
 import '../data/world_data.dart';
@@ -17,7 +16,6 @@ import '../widgets/hud_widget.dart';
 import '../widgets/item_widget.dart';
 import '../widgets/obstacle_widget.dart';
 import '../widgets/runner_widget.dart';
-import '../widgets/track_painter.dart';
 import 'game_over_screen.dart';
 import 'pause_screen.dart';
 import 'victory_screen.dart';
@@ -44,6 +42,22 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
   Offset _dragPosition = Offset.zero;
 
   bool _navigatedAway = false;
+
+  // ---------------------------------------------------------------------------
+  // VISUAL TRACK SETTINGS
+  // ---------------------------------------------------------------------------
+  //
+  // This is ONLY the visual depth window.
+  //
+  // It does NOT change gameplay distance, collision distance,
+  // obstacle spawning, or runner speed.
+  //
+  // Larger value = objects become visible farther away and approach
+  // the player more gradually.
+  //
+  static const double _visibilityWindow = 180.0;
+
+  static const double _minimumVisibleDistance = -8.0;
 
   @override
   void initState() {
@@ -244,33 +258,6 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
                 ),
 
                 // =============================================================
-                // TRACK
-                // =============================================================
-
-                Transform.translate(
-                  offset: Offset(
-                    engine.cameraEngine.offsetX,
-                    engine.cameraEngine.offsetY,
-                  ),
-
-                  child: CustomPaint(
-                    painter: TrackPainter(
-                      depthScroll:
-                          engine.cameraEngine.depthScroll,
-
-                      speedFactor:
-                          (engine.physics.forwardSpeed /
-                                  GameConstants
-                                      .defaultMaxSpeed)
-                              .clamp(0.0, 1.5),
-                    ),
-
-                    child:
-                        const SizedBox.expand(),
-                  ),
-                ),
-
-                // =============================================================
                 // OBJECTS
                 // =============================================================
 
@@ -315,8 +302,6 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
     final size =
         MediaQuery.of(context).size;
 
-    // Player always stays at the ground/near-camera
-    // position of the perspective road.
     final groundY =
         TrackGeometry.groundY(
       size.height,
@@ -329,10 +314,6 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
       1.0,
     );
 
-    // Physics vertical position controls jumping.
-    //
-    // verticalPosition = 0 when grounded.
-    // Negative values move upward.
     final jumpOffset =
         engine.physics.verticalPosition *
             0.4;
@@ -342,7 +323,8 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
 
     return Positioned(
       left:
-          laneX - runnerWidth / 2,
+          laneX -
+              runnerWidth / 2,
 
       top:
           groundY +
@@ -391,28 +373,19 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
           obstacle.distance -
               engine.distanceMeters;
 
-      // Ignore objects that are already behind
-      // or too far away.
-      if (relative < -3 ||
-          relative > 45) {
+      // Objects behind the runner are removed visually.
+      //
+      // Objects farther than the visual window are not drawn yet.
+      if (relative < _minimumVisibleDistance ||
+          relative > _visibilityWindow) {
         continue;
       }
 
-      // -----------------------------------------------------------------------
-      // DEPTH
-      //
-      // relative = 45 -> horizon
-      // relative = 0  -> player
-      // -----------------------------------------------------------------------
-
       final t =
           (1.0 -
-                  (relative / 45.0))
+                  (relative /
+                      _visibilityWindow))
               .clamp(0.0, 1.0);
-
-      // -----------------------------------------------------------------------
-      // ROAD POSITION
-      // -----------------------------------------------------------------------
 
       final laneX =
           TrackGeometry.laneX(
@@ -427,13 +400,10 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
         t,
       );
 
-      // -----------------------------------------------------------------------
-      // SCALE
-      // -----------------------------------------------------------------------
-
+      // Smaller in the distance, larger near the player.
       final scale =
-          0.35 +
-              (0.95 * t);
+          0.20 +
+              (0.90 * t);
 
       final objectSize =
           80.0 * scale;
@@ -447,6 +417,12 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
           top:
               y -
                   objectSize / 2,
+
+          width:
+              objectSize,
+
+          height:
+              objectSize,
 
           child:
               ObstacleWidget(
@@ -473,23 +449,16 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
           item.distance -
               engine.distanceMeters;
 
-      if (relative < -3 ||
-          relative > 45) {
+      if (relative < _minimumVisibleDistance ||
+          relative > _visibilityWindow) {
         continue;
       }
 
-      // -----------------------------------------------------------------------
-      // DEPTH
-      // -----------------------------------------------------------------------
-
       final t =
           (1.0 -
-                  (relative / 45.0))
+                  (relative /
+                      _visibilityWindow))
               .clamp(0.0, 1.0);
-
-      // -----------------------------------------------------------------------
-      // ROAD POSITION
-      // -----------------------------------------------------------------------
 
       final laneX =
           TrackGeometry.laneX(
@@ -504,13 +473,9 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
         t,
       );
 
-      // -----------------------------------------------------------------------
-      // SCALE
-      // -----------------------------------------------------------------------
-
       final scale =
-          0.35 +
-              (0.95 * t);
+          0.20 +
+              (0.90 * t);
 
       final objectSize =
           44.0 * scale;
@@ -524,6 +489,12 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
           top:
               y -
                   objectSize / 2,
+
+          width:
+              objectSize,
+
+          height:
+              objectSize,
 
           child:
               ItemWidget(
