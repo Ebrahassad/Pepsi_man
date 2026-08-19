@@ -22,9 +22,9 @@ class GameConstants {
   static const double laneSwitchDurationSeconds = 0.18;
 
   // Speed
-static const double defaultBaseSpeed = 260.0;
-static const double defaultMaxSpeed = 650.0;
-static const double defaultAcceleration = 4.0;
+static const double defaultBaseSpeed = 110.0;
+static const double defaultMaxSpeed = 260.0;
+static const double defaultAcceleration = 3.0;
 
 // Track perspective calibration
 //
