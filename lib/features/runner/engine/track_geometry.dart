@@ -1,10 +1,10 @@
 import '../../../core/constants/game_constants.dart';
 
-/// Single source of truth for the road's perspective geometry.
+/// Single source of truth for the visual perspective of the running track.
 ///
 /// Depth:
-///   t = 0.0 -> horizon / far distance
-///   t = 1.0 -> runner / near camera
+/// t = 0.0 -> horizon / very far
+/// t = 1.0 -> player / near camera
 class TrackGeometry {
   TrackGeometry._();
 
@@ -16,26 +16,16 @@ class TrackGeometry {
     return a + (b - a) * t;
   }
 
-  static double _clampT(double t) {
-    return t.clamp(0.0, 1.0);
-  }
-
-  /// Smooth S-curve used only for horizontal lane transition through depth.
-  ///
-  /// This keeps the road visually stable while making the expansion toward
-  /// the camera feel less mechanically linear.
-  static double _smoothStep(double t) {
-    final x = _clampT(t);
-
-    return x * x * (3.0 - 2.0 * x);
-  }
+  // ===========================================================================
+  // ROAD EDGES
+  // ===========================================================================
 
   /// Left edge of the road at depth [t].
   static double roadLeftX(
     double screenWidth,
     double t,
   ) {
-    final depth = _clampT(t);
+    final depth = t.clamp(0.0, 1.0);
 
     return _lerp(
       screenWidth *
@@ -51,7 +41,7 @@ class TrackGeometry {
     double screenWidth,
     double t,
   ) {
-    final depth = _clampT(t);
+    final depth = t.clamp(0.0, 1.0);
 
     return _lerp(
       screenWidth *
@@ -62,12 +52,16 @@ class TrackGeometry {
     );
   }
 
-  /// Horizontal center of a lane.
+  // ===========================================================================
+  // LANES
+  // ===========================================================================
+
+  /// Returns the X coordinate of a lane at depth [t].
   ///
   /// lanePosition:
-  ///   0 = left
-  ///   1 = center
-  ///   2 = right
+  /// 0 = left
+  /// 1 = center
+  /// 2 = right
   ///
   /// Fractional values are supported during lane switching.
   static double laneX(
@@ -75,7 +69,7 @@ class TrackGeometry {
     double lanePosition,
     double t,
   ) {
-    final depth = _clampT(t);
+    final depth = t.clamp(0.0, 1.0);
 
     final left = roadLeftX(
       screenWidth,
@@ -98,26 +92,39 @@ class TrackGeometry {
     );
   }
 
-  /// Vertical screen position at depth [t].
+  // ===========================================================================
+  // VERTICAL PERSPECTIVE
+  // ===========================================================================
+
+  /// Returns the screen Y coordinate for depth [t].
   ///
-  /// The road begins visually near 42% of the screen and reaches the
-  /// player's feet at 85%.
+  /// The interpolation is intentionally nonlinear.
+  ///
+  /// Far objects stay visually close to the horizon for longer and then
+  /// travel through the lower part of the road much faster.
   static double depthY(
     double screenHeight,
     double t,
   ) {
-    final depth = _clampT(t);
+    final depth = t.clamp(0.0, 1.0);
+
+    // Smooth perspective curve.
+    //
+    // This is deliberately stronger than a simple linear interpolation
+    // because the artwork has a long road extending toward the horizon.
+    final curvedDepth =
+        depth * depth;
 
     return _lerp(
       screenHeight *
           GameConstants.trackHorizonYFraction,
       screenHeight *
           GameConstants.trackGroundYFraction,
-      depth,
+      curvedDepth,
     );
   }
 
-  /// Y coordinate of the runner's feet.
+  /// Ground Y at the player's feet.
   static double groundY(
     double screenHeight,
   ) {
@@ -125,71 +132,87 @@ class TrackGeometry {
         GameConstants.trackGroundYFraction;
   }
 
-  /// Perspective scale for an object.
+  // ===========================================================================
+  // OBJECT SCALE
+  // ===========================================================================
+
+  /// Perspective scale for obstacles/items.
   ///
-  /// Far:
-  ///   ~0.05
+  /// t = 0.0 -> very far -> tiny
+  /// t = 0.5 -> still relatively small
+  /// t = 0.8 -> noticeably large
+  /// t = 1.0 -> full size
   ///
-  /// Middle:
-  ///   ~0.17
-  ///
-  /// Near:
-  ///   ~0.54
-  ///
-  /// Player:
-  ///   1.00
+  /// Uses the configured exponent from GameConstants.
   static double perspectiveScale(
     double t,
   ) {
-    final depth = _clampT(t);
+    final depth = t.clamp(0.0, 1.0);
 
-    final curvedDepth =
-        depth ==
-                0.0 ||
-            depth ==
-                1.0
-            ? depth
-            : _powDepth(depth);
-
-    return _lerp(
-      GameConstants.obstacleMinScale,
-      GameConstants.obstacleMaxScale,
-      curvedDepth,
-    );
-  }
-
-  static double _powDepth(
-    double depth,
-  ) {
-    // Manual exponentiation without importing dart:math.
-    //
-    // The exponent is currently 3.0, which gives the desired strong
-    // perspective growth near the player.
     final exponent =
         GameConstants
             .obstaclePerspectiveExponent;
 
-    if (exponent == 3.0) {
-      return depth * depth * depth;
+    final normalized =
+        depth == 0.0
+            ? 0.0
+            : _pow(
+                depth,
+                exponent,
+            );
+
+    return _lerp(
+      GameConstants.obstacleMinScale,
+      GameConstants.obstacleMaxScale,
+      normalized,
+    );
+  }
+
+  /// Small local power implementation.
+  ///
+  /// Avoids introducing another dependency into the geometry class.
+  static double _pow(
+    double value,
+    double exponent,
+  ) {
+    if (value <= 0) {
+      return 0.0;
+    }
+
+    if (exponent == 1.0) {
+      return value;
     }
 
     if (exponent == 2.0) {
-      return depth * depth;
+      return value * value;
     }
 
-    // Fallback for future tuning.
-    //
-    // Current production value is 3.0.
-    return depth * depth * depth;
-  }
+    if (exponent == 3.0) {
+      return value * value * value;
+    }
 
-  /// Smooth lane movement factor.
-  ///
-  /// Useful for future lane-switch animation without changing the physical
-  /// lane positions.
-  static double smoothLaneProgress(
-    double progress,
-  ) {
-    return _smoothStep(progress);
+    // Fallback for future tuning values.
+    //
+    // For the current configuration exponent = 3.0, so this branch
+    // normally isn't used.
+    double result = 1.0;
+    int whole =
+        exponent.floor();
+
+    for (int i = 0; i < whole; i++) {
+      result *= value;
+    }
+
+    final fractional =
+        exponent - whole;
+
+    if (fractional > 0) {
+      result *=
+          value == 0
+              ? 0
+              : value;
+    }
+
+    return result;
   }
 }
