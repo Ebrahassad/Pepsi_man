@@ -5,7 +5,10 @@ import '../models/runner_model.dart';
 /// Renders the runner using animation frames for the current state.
 class RunnerWidget extends StatefulWidget {
   final RunnerState state;
+
+  /// Height/size of the runner visual.
   final double size;
+
   final bool facingRight;
 
   const RunnerWidget({
@@ -16,10 +19,12 @@ class RunnerWidget extends StatefulWidget {
   });
 
   @override
-  State<RunnerWidget> createState() => _RunnerWidgetState();
+  State<RunnerWidget> createState() =>
+      _RunnerWidgetState();
 }
 
-class _RunnerWidgetState extends State<RunnerWidget>
+class _RunnerWidgetState
+    extends State<RunnerWidget>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
@@ -29,40 +34,64 @@ class _RunnerWidgetState extends State<RunnerWidget>
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
+    _controller =
+        AnimationController(
       vsync: this,
-      duration: _durationForState(widget.state),
-    )..addListener(_onTick);
+      duration:
+          _durationForState(
+        widget.state,
+      ),
+    )..addListener(
+            _onTick,
+          );
 
     _startAnimationIfNeeded();
   }
 
-  Duration _durationForState(RunnerState state) {
+  Duration _durationForState(
+    RunnerState state,
+  ) {
     switch (state) {
       case RunnerState.running:
-        return const Duration(milliseconds: 480);
+        return const Duration(
+          milliseconds: 480,
+        );
 
       case RunnerState.jumping:
-        return const Duration(milliseconds: 420);
+        return const Duration(
+          milliseconds: 420,
+        );
 
       case RunnerState.sliding:
-        return const Duration(milliseconds: 360);
+        return const Duration(
+          milliseconds: 360,
+        );
 
       case RunnerState.hit:
-        return const Duration(milliseconds: 360);
+        return const Duration(
+          milliseconds: 360,
+        );
 
       case RunnerState.falling:
-        return const Duration(milliseconds: 360);
+        return const Duration(
+          milliseconds: 360,
+        );
 
       case RunnerState.celebrating:
-        return const Duration(milliseconds: 600);
+        return const Duration(
+          milliseconds: 600,
+        );
 
       case RunnerState.idle:
-        return const Duration(milliseconds: 320);
+        return const Duration(
+          milliseconds: 320,
+        );
     }
   }
 
-  List<String> _framesForState(RunnerState state) {
+  List<String> _framesForState(
+    RunnerState state,
+  ) {
     switch (state) {
       case RunnerState.running:
         return RunnerModel.runCycleAssets;
@@ -89,49 +118,73 @@ class _RunnerWidgetState extends State<RunnerWidget>
     }
   }
 
-  bool _shouldAnimate(RunnerState state) {
+  bool _shouldAnimate(
+    RunnerState state,
+  ) {
     return state != RunnerState.idle;
   }
 
   void _startAnimationIfNeeded() {
     if (_shouldAnimate(widget.state)) {
       _controller
-        ..duration = _durationForState(widget.state)
+        ..duration =
+            _durationForState(
+          widget.state,
+        )
         ..repeat();
     }
   }
 
   void _onTick() {
-    final frames = _framesForState(widget.state);
+    final frames =
+        _framesForState(
+      widget.state,
+    );
 
     if (frames.length <= 1) {
-      if (_frameIndex != 0 && mounted) {
+      if (_frameIndex != 0 &&
+          mounted) {
         setState(() {
           _frameIndex = 0;
         });
       }
+
       return;
     }
 
     final newFrame =
-        (_controller.value * frames.length).floor() % frames.length;
+        (_controller.value *
+                frames.length)
+            .floor() %
+            frames.length;
 
-    if (newFrame != _frameIndex && mounted) {
+    if (newFrame !=
+            _frameIndex &&
+        mounted) {
       setState(() {
-        _frameIndex = newFrame;
+        _frameIndex =
+            newFrame;
       });
     }
   }
 
   @override
-  void didUpdateWidget(covariant RunnerWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
+  void didUpdateWidget(
+    covariant RunnerWidget oldWidget,
+  ) {
+    super.didUpdateWidget(
+      oldWidget,
+    );
 
-    if (oldWidget.state != widget.state) {
+    if (oldWidget.state !=
+        widget.state) {
       _controller
         ..stop()
         ..reset()
-        ..duration = _durationForState(widget.state);
+        ..duration =
+            _durationForState(
+          widget.state,
+        );
 
       _frameIndex = 0;
 
@@ -143,19 +196,29 @@ class _RunnerWidgetState extends State<RunnerWidget>
 
   @override
   void dispose() {
-    _controller.removeListener(_onTick);
+    _controller.removeListener(
+      _onTick,
+    );
+
     _controller.dispose();
+
     super.dispose();
   }
 
   String get _assetPath {
-    final frames = _framesForState(widget.state);
+    final frames =
+        _framesForState(
+      widget.state,
+    );
 
     if (frames.isEmpty) {
-      return RunnerModel.assetByState[RunnerState.idle]!;
+      return RunnerModel
+              .assetByState[
+          RunnerState.idle]!;
     }
 
-    if (_frameIndex >= frames.length) {
+    if (_frameIndex >=
+        frames.length) {
       return frames.first;
     }
 
@@ -163,19 +226,36 @@ class _RunnerWidgetState extends State<RunnerWidget>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Transform.flip(
-      flipX: !widget.facingRight,
+      flipX:
+          !widget.facingRight,
+
       child: SizedBox(
         width: widget.size,
         height: widget.size,
+
         child: Image.asset(
           _assetPath,
+
           fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
+
+          alignment:
+              Alignment.bottomCenter,
+
+          errorBuilder:
+              (
+                context,
+                error,
+                stackTrace,
+              ) {
             return _FallbackRunnerPainter(
-              state: widget.state,
-              size: widget.size,
+              state:
+                  widget.state,
+              size:
+                  widget.size,
             );
           },
         ),
@@ -184,8 +264,12 @@ class _RunnerWidgetState extends State<RunnerWidget>
   }
 }
 
-/// Fallback used only if an actual sprite is missing.
-class _FallbackRunnerPainter extends StatelessWidget {
+// ============================================================================
+// FALLBACK
+// ============================================================================
+
+class _FallbackRunnerPainter
+    extends StatelessWidget {
   final RunnerState state;
   final double size;
 
@@ -195,15 +279,24 @@ class _FallbackRunnerPainter extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return CustomPaint(
-      size: Size(size, size),
-      painter: _RunnerPainter(state: state),
+      size: Size(
+        size,
+        size,
+      ),
+      painter:
+          _RunnerPainter(
+        state: state,
+      ),
     );
   }
 }
 
-class _RunnerPainter extends CustomPainter {
+class _RunnerPainter
+    extends CustomPainter {
   final RunnerState state;
 
   _RunnerPainter({
@@ -211,22 +304,43 @@ class _RunnerPainter extends CustomPainter {
   });
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final bodyPaint = Paint()
-      ..color = _colorForState(state);
+  void paint(
+    Canvas canvas,
+    Size size,
+  ) {
+    final bodyPaint =
+        Paint()
+          ..color =
+              _colorForState(
+            state,
+          );
 
-    final headPaint = Paint()
-      ..color = const Color(0xFFFFCCA0);
+    final headPaint =
+        Paint()
+          ..color =
+              const Color(
+            0xFFFFCCA0,
+          );
 
-    double bodyHeight = size.height * 0.55;
-    double bodyTop = size.height * 0.25;
+    double bodyHeight =
+        size.height * 0.55;
 
-    if (state == RunnerState.sliding) {
-      bodyHeight = size.height * 0.3;
-      bodyTop = size.height * 0.55;
-    } else if (state == RunnerState.jumping ||
-        state == RunnerState.falling) {
-      bodyTop = size.height * 0.1;
+    double bodyTop =
+        size.height * 0.25;
+
+    if (state ==
+        RunnerState.sliding) {
+      bodyHeight =
+          size.height * 0.3;
+
+      bodyTop =
+          size.height * 0.55;
+    } else if (state ==
+            RunnerState.jumping ||
+        state ==
+            RunnerState.falling) {
+      bodyTop =
+          size.height * 0.1;
     }
 
     canvas.drawRRect(
@@ -237,7 +351,9 @@ class _RunnerPainter extends CustomPainter {
           size.width * 0.4,
           bodyHeight,
         ),
-        const Radius.circular(10),
+        const Radius.circular(
+          10,
+        ),
       ),
       bodyPaint,
     );
@@ -245,27 +361,38 @@ class _RunnerPainter extends CustomPainter {
     canvas.drawCircle(
       Offset(
         size.width * 0.5,
-        bodyTop - size.height * 0.08,
+        bodyTop -
+            size.height * 0.08,
       ),
       size.width * 0.14,
       headPaint,
     );
   }
 
-  Color _colorForState(RunnerState state) {
+  Color _colorForState(
+    RunnerState state,
+  ) {
     switch (state) {
       case RunnerState.hit:
       case RunnerState.falling:
-        return const Color(0xFFE53935);
+        return const Color(
+          0xFFE53935,
+        );
 
       case RunnerState.celebrating:
-        return const Color(0xFFFFC107);
+        return const Color(
+          0xFFFFC107,
+        );
 
       case RunnerState.sliding:
-        return const Color(0xFF43A047);
+        return const Color(
+          0xFF43A047,
+        );
 
       default:
-        return const Color(0xFF1E88E5);
+        return const Color(
+          0xFF1E88E5,
+        );
     }
   }
 
@@ -273,6 +400,7 @@ class _RunnerPainter extends CustomPainter {
   bool shouldRepaint(
     covariant _RunnerPainter oldDelegate,
   ) {
-    return oldDelegate.state != state;
+    return oldDelegate.state !=
+        state;
   }
 }
