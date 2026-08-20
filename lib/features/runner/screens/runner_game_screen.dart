@@ -55,15 +55,12 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
   // VISUAL DEPTH
   // ===========================================================================
 
-  /// Long visual distance so obstacles can be seen far down the road.
+  /// Visual depth is deliberately much longer than the old 180.
   ///
-  /// This controls ONLY the visual representation.
+  /// This allows obstacles to appear near the horizon and travel through the
+  /// entire visible road before reaching the player.
   ///
-  /// It does NOT change:
-  /// - gameplay distance
-  /// - collision distance
-  /// - runner speed
-  /// - obstacle spawn distance
+  /// This DOES NOT change gameplay distance, collision distance or runner speed.
   static const double _visibilityWindow =
       GameConstants.visualDepthWindow;
 
@@ -86,7 +83,9 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
     );
 
     final world =
-        WorldData.byId(widget.level.worldId);
+        WorldData.byId(
+      widget.level.worldId,
+    );
 
     AudioManager.instance.playMusic(
       world.musicAsset,
@@ -103,23 +102,37 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
     );
   }
 
-  void _onTick(Duration elapsed) {
+  // ===========================================================================
+  // TICK
+  // ===========================================================================
+
+  void _onTick(
+    Duration elapsed,
+  ) {
     _controller.tick(elapsed);
   }
 
+  // ===========================================================================
+  // ENGINE STATE
+  // ===========================================================================
+
   void _onEngineUpdate() {
-    if (_navigatedAway) return;
+    if (_navigatedAway) {
+      return;
+    }
 
     final reason =
         _controller.endReason;
 
-    if (reason == RunEndReason.levelComplete) {
+    if (reason ==
+        RunEndReason.levelComplete) {
       _navigatedAway = true;
 
       _ticker.stop();
 
       _goToVictory();
-    } else if (reason == RunEndReason.gameOver) {
+    } else if (reason ==
+        RunEndReason.gameOver) {
       _navigatedAway = true;
 
       _ticker.stop();
@@ -128,10 +141,16 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
     }
   }
 
+  // ===========================================================================
+  // NAVIGATION
+  // ===========================================================================
+
   void _goToVictory() {
     WidgetsBinding.instance
         .addPostFrameCallback((_) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -147,7 +166,9 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
   void _goToGameOver() {
     WidgetsBinding.instance
         .addPostFrameCallback((_) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -159,6 +180,10 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
       );
     });
   }
+
+  // ===========================================================================
+  // PAUSE
+  // ===========================================================================
 
   Future<void> _openPause() async {
     _controller.pause();
@@ -173,7 +198,9 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
       ),
     );
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     switch (result) {
       case 'restart':
@@ -198,6 +225,10 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
     }
   }
 
+  // ===========================================================================
+  // DISPOSE
+  // ===========================================================================
+
   @override
   void dispose() {
     _controller.removeListener(
@@ -216,13 +247,18 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
   // ===========================================================================
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     final world =
-        WorldData.byId(widget.level.worldId);
+        WorldData.byId(
+      widget.level.worldId,
+    );
 
     return Scaffold(
       body: GestureDetector(
-        onPanStart: _input.onPanStart,
+        onPanStart:
+            _input.onPanStart,
 
         onPanUpdate: (details) {
           _dragPosition =
@@ -246,7 +282,10 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
         child: AnimatedBuilder(
           animation: _controller,
 
-          builder: (context, _) {
+          builder: (
+            context,
+            _,
+          ) {
             final engine =
                 _controller.engine;
 
@@ -260,8 +299,11 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
                 Image.asset(
                   world.backgroundAsset,
                   fit: BoxFit.cover,
-                  errorBuilder:
-                      (context, error, stackTrace) {
+                  errorBuilder: (
+                    context,
+                    error,
+                    stackTrace,
+                  ) {
                     return Container(
                       color: Colors.black,
                     );
@@ -313,21 +355,11 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
     final size =
         MediaQuery.of(context).size;
 
-    // -------------------------------------------------------------------------
-    // GROUND POSITION
-    // -------------------------------------------------------------------------
-    //
-    // The player's feet are placed exactly on the near-camera ground plane.
-    //
-
+    // Player feet are always located at the near-camera ground plane.
     final groundY =
         TrackGeometry.groundY(
       size.height,
     );
-
-    // -------------------------------------------------------------------------
-    // LANE POSITION
-    // -------------------------------------------------------------------------
 
     final laneX =
         TrackGeometry.laneX(
@@ -336,17 +368,11 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
       1.0,
     );
 
-    // -------------------------------------------------------------------------
-    // JUMP OFFSET
-    // -------------------------------------------------------------------------
-    //
     // Physics verticalPosition:
-    //  0     = ground
-    //  < 0   = above ground
+    // 0     = ground
+    // < 0   = jumping
     //
-    // Therefore multiplying it by a positive factor moves the sprite upward.
-    //
-
+    // Negative values move the visual sprite upward.
     final jumpOffset =
         engine.physics.verticalPosition *
             0.40;
@@ -354,13 +380,6 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
     // -------------------------------------------------------------------------
     // PLAYER SIZE
     // -------------------------------------------------------------------------
-    //
-    // Height = 20% of screen height.
-    // Width  = 55% of height.
-    //
-    // These values come from GameConstants so the player scales correctly
-    // across different screen sizes.
-    //
 
     final runnerHeight =
         size.height *
@@ -373,12 +392,6 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
     // -------------------------------------------------------------------------
     // PLAYER POSITION
     // -------------------------------------------------------------------------
-    //
-    // The bottom of the player's box is aligned with groundY.
-    //
-    // This means the feet stay on the road rather than the center of the
-    // sprite being placed on the road.
-    //
 
     final runnerTop =
         groundY +
@@ -400,8 +413,10 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
           runnerHeight,
 
       child: RunnerWidget(
-        state: engine.runner.state,
-        size: runnerHeight,
+        state:
+            engine.runner.state,
+        size:
+            runnerHeight,
       ),
     );
   }
@@ -417,8 +432,8 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
     final size =
         MediaQuery.of(context).size;
 
-    final objects =
-        <_TrackRenderObject>[];
+    final widgets =
+        <Widget>[];
 
     // =========================================================================
     // OBSTACLES
@@ -428,20 +443,20 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
       final ObstacleInstance obstacle
           in engine.obstacleEngine.active
     ) {
-      // Do not draw obstacles that have not entered their visual lifecycle.
       if (!obstacle.hasAppeared) {
         continue;
       }
 
-      // -----------------------------------------------------------------------
-      // RELATIVE DISTANCE
-      // -----------------------------------------------------------------------
-
+      // Distance between the obstacle and the runner.
+      //
+      // Large positive value = obstacle is far ahead.
+      // Near zero = obstacle is at the player.
+      // Negative = obstacle has passed the player.
       final relative =
           obstacle.distance -
               engine.distanceMeters;
 
-      // Behind the runner OR farther than the visual depth.
+      // Do not render objects behind the player or beyond the visual horizon.
       if (relative <
               _minimumVisibleDistance ||
           relative >
@@ -453,18 +468,21 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
       // DEPTH
       // -----------------------------------------------------------------------
       //
-      // t = 0 → horizon / very far
-      // t = 1 → player / near camera
+      // relative = visibilityWindow -> t = 0
+      // relative = 0                -> t = 1
       //
-
+      // Therefore objects travel through the complete visible road.
       final t =
           (1.0 -
                   relative /
                       _visibilityWindow)
-              .clamp(0.0, 1.0);
+              .clamp(
+        0.0,
+        1.0,
+      );
 
       // -----------------------------------------------------------------------
-      // HORIZONTAL PERSPECTIVE
+      // X POSITION
       // -----------------------------------------------------------------------
 
       final laneX =
@@ -475,7 +493,7 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
       );
 
       // -----------------------------------------------------------------------
-      // VERTICAL PERSPECTIVE
+      // Y POSITION
       // -----------------------------------------------------------------------
 
       final groundY =
@@ -485,17 +503,8 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
       );
 
       // -----------------------------------------------------------------------
-      // OBJECT SCALE
+      // PERSPECTIVE SCALE
       // -----------------------------------------------------------------------
-      //
-      // TrackGeometry handles the perspective curve.
-      //
-      // This replaces the old linear:
-      //
-      // 0.20 + (0.90 * t)
-      //
-      // which caused objects to grow too quickly.
-      //
 
       final scale =
           TrackGeometry.perspectiveScale(
@@ -503,33 +512,29 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
       );
 
       // -----------------------------------------------------------------------
-      // ADD OBJECT
+      // OBSTACLE
       // -----------------------------------------------------------------------
       //
-      // ObstacleWidget receives the perspective scale.
+      // ObstacleWidget receives the perspective scale only once.
       //
-      // The object is anchored at:
+      // The obstacle is anchored:
       //
-      // BOTTOM CENTER
+      // bottom center -> road
       //
-      // of the road position.
-      //
-
-      objects.add(
-        _TrackRenderObject(
-          depth: t,
-          widget: Positioned(
-            left: laneX,
-            top: groundY,
-            child: FractionalTranslation(
-              translation: const Offset(
-                -0.5,
-                -1.0,
-              ),
-              child: ObstacleWidget(
-                instance: obstacle,
-                scale: scale,
-              ),
+      // This prevents it from appearing to float or sit above the road.
+      widgets.add(
+        Positioned(
+          left: laneX,
+          top: groundY,
+          child: FractionalTranslation(
+            translation:
+                const Offset(
+              -0.5,
+              -1.0,
+            ),
+            child: ObstacleWidget(
+              instance: obstacle,
+              scale: scale,
             ),
           ),
         ),
@@ -547,10 +552,6 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
       if (item.isCollected) {
         continue;
       }
-
-      // -----------------------------------------------------------------------
-      // RELATIVE DISTANCE
-      // -----------------------------------------------------------------------
 
       final relative =
           item.distance -
@@ -571,10 +572,13 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
           (1.0 -
                   relative /
                       _visibilityWindow)
-              .clamp(0.0, 1.0);
+              .clamp(
+        0.0,
+        1.0,
+      );
 
       // -----------------------------------------------------------------------
-      // LANE
+      // X
       // -----------------------------------------------------------------------
 
       final laneX =
@@ -585,7 +589,7 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
       );
 
       // -----------------------------------------------------------------------
-      // GROUND
+      // Y
       // -----------------------------------------------------------------------
 
       final groundY =
@@ -603,80 +607,35 @@ class _RunnerGameScreenState extends State<RunnerGameScreen>
         t,
       );
 
-      // Items remain smaller than obstacles.
+      // Items are intentionally smaller than obstacles.
       final itemSize =
           44.0 * scale;
 
-      // -----------------------------------------------------------------------
-      // ADD ITEM
-      // -----------------------------------------------------------------------
+      widgets.add(
+        Positioned(
+          left:
+              laneX -
+                  itemSize / 2,
 
-      objects.add(
-        _TrackRenderObject(
-          depth: t,
-          widget: Positioned(
-            left:
-                laneX -
-                    itemSize / 2,
+          // Keep the item slightly above the road.
+          top:
+              groundY -
+                  itemSize * 1.05,
 
-            // Float slightly above the road.
-            top:
-                groundY -
-                    itemSize * 1.05,
+          width:
+              itemSize,
 
-            width:
-                itemSize,
+          height:
+              itemSize,
 
-            height:
-                itemSize,
-
-            child: ItemWidget(
-              instance: item,
-              scale: scale,
-            ),
+          child: ItemWidget(
+            instance: item,
+            scale: scale,
           ),
         ),
       );
     }
 
-    // =========================================================================
-    // DEPTH SORTING
-    // =========================================================================
-    //
-    // Far objects are rendered first.
-    //
-    // Near objects are rendered afterward.
-    //
-    // This keeps the visual layering consistent with the road perspective.
-    //
-
-    objects.sort(
-      (a, b) =>
-          a.depth.compareTo(
-        b.depth,
-      ),
-    );
-
-    return objects
-        .map(
-          (object) => object.widget,
-        )
-        .toList();
+    return widgets;
   }
-}
-
-// =============================================================================
-// TRACK RENDER OBJECT
-// =============================================================================
-
-/// Small wrapper used only for depth sorting before the widgets are inserted
-/// into the Stack.
-class _TrackRenderObject {
-  final double depth;
-  final Widget widget;
-
-  const _TrackRenderObject({
-    required this.depth,
-    required this.widget,
-  });
 }
