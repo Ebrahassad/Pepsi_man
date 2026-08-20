@@ -38,36 +38,30 @@ class GameConstants {
   // SPEED
   // ===========================================================================
 
-  static const double defaultBaseSpeed = 110.0;
+  // Reference gameplay speed.
+  // The previous 110/260 values caused the 400m Level 1 track
+  // to complete in only a few seconds.
+  static const double defaultBaseSpeed = 12.0;
 
-  static const double defaultMaxSpeed = 260.0;
+  static const double defaultMaxSpeed = 25.0;
 
-  static const double defaultAcceleration = 3.0;
+  // Smooth acceleration from base speed toward max speed.
+  static const double defaultAcceleration = 2.0;
 
   // ===========================================================================
   // TRACK PERSPECTIVE
   // ===========================================================================
-  //
-  // These values are calibrated for the supplied city-road artwork.
-  //
+
   // t = 0.0 → distant road / horizon
   // t = 1.0 → runner / near camera
-  //
-  // The artwork has a long visible road, so the gameplay geometry must not
-  // be compressed into the old 0.68 → 0.78 range.
-  //
 
-  // Vanishing/horizon area.
   static const double trackHorizonYFraction = 0.42;
 
-  // Runner feet / collision plane.
   static const double trackGroundYFraction = 0.85;
 
-  // Road width at the distant horizon.
   static const double trackTopLeftXFraction = 0.475;
   static const double trackTopRightXFraction = 0.525;
 
-  // Road width close to the player.
   static const double trackBottomLeftXFraction = 0.10;
   static const double trackBottomRightXFraction = 0.90;
 
@@ -75,25 +69,21 @@ class GameConstants {
   // PLAYER VISUAL CALIBRATION
   // ===========================================================================
 
-  // Player height relative to the screen height.
-  static const double runnerHeightFraction = 0.20;
+  // Reference resolution: 1080x1920
+  // Reference player: 110x180
+  //
+  // Height = 180 / 1920 = 0.09375
+  // Width / Height = 110 / 180 = 0.611111...
+  static const double runnerHeightFraction = 180.0 / 1920.0;
 
-  // Player width relative to its height.
-  static const double runnerWidthToHeight = 0.55;
+  static const double runnerWidthToHeight = 110.0 / 180.0;
 
   // ===========================================================================
   // VISUAL DEPTH
   // ===========================================================================
 
-  // How far ahead obstacles/items remain visible.
-  //
-  // The previous value was 180, which made obstacles appear very close.
-  // 700 gives the road enough visual length without making objects appear
-  // impossibly distant.
   static const double visualDepthWindow = 700.0;
 
-  // Objects can remain for a tiny amount behind the player so they disappear
-  // naturally instead of being clipped exactly at the collision plane.
   static const double minimumVisibleDistance = -20.0;
 
   // ===========================================================================
@@ -103,13 +93,6 @@ class GameConstants {
   static const double obstacleMinScale = 0.05;
   static const double obstacleMaxScale = 1.00;
 
-  // Controls how quickly objects grow near the camera.
-  //
-  // 3.0 means:
-  // t=0.00 → 0.05
-  // t=0.50 → about 0.17
-  // t=0.80 → about 0.54
-  // t=1.00 → 1.00
   static const double obstaclePerspectiveExponent = 3.0;
 
   // ===========================================================================
